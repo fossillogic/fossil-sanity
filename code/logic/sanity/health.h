@@ -15,19 +15,23 @@
 #define FOSSIL_SANITY_HEALTH_H
 
 #include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Health Monitoring Functions
+// Initialize health monitoring (call during application startup)
+bool fossil_sanity_health_init(void);
 
-// Get the application's current uptime in seconds
+// Cleanup health monitoring resources (call during application shutdown)
+void fossil_sanity_health_cleanup(void);
+
+// Get the application's current uptime in milliseconds
 uint64_t fossil_sanity_get_uptime(void);
 
-// Get the application's current memory usage
+// Get the application's current memory usage in bytes
 size_t fossil_sanity_get_memory_usage(void);
 
 // Get the current number of active threads
@@ -35,22 +39,6 @@ size_t fossil_sanity_get_active_threads(void);
 
 // Check if the application is in a healthy state
 bool fossil_sanity_is_healthy(void);
-
-// Profiling Functions
-
-// Start profiling a specific section of code
-void fossil_sanity_start_profiling(const char *section_name);
-
-// Stop profiling a specific section and return elapsed time in microseconds
-uint64_t fossil_sanity_stop_profiling(const char *section_name);
-
-// Generate a detailed profile report (output to console or log file)
-void fossil_sanity_generate_profile_report(void);
-
-// Utility
-
-// Reset all health and profiling metrics
-void fossil_sanity_reset_metrics(void);
 
 #ifdef __cplusplus
 }
