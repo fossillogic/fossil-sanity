@@ -15,7 +15,7 @@
 #ifndef FOSSIL_SANITY_FRAMEWORK_H
 #define FOSSIL_SANITY_FRAMEWORK_H
 
-#include "sanity.h"
+#include "validate.h"
 #include "logging.h"
 
 #endif
