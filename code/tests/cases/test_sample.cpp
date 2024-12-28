@@ -14,6 +14,7 @@
  */
 #include <fossil/test/framework.h>
 #include <fossil/sanity/framework.h>
+#include <string>
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
 // * Fossil Logic Test Utilites
@@ -43,41 +44,43 @@ FOSSIL_TEARDOWN(cpp_sample_suite) {
 // as samples for library usage.
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
+#include <string>
+
 FOSSIL_TEST_CASE(cpp_validate_integer) {
-    const char *valid_input = "12345";
-    const char *invalid_input = "12a45";
+    std::string valid_input = "12345";
+    std::string invalid_input = "12a45";
 
     // Test cases
-    FOSSIL_TEST_ASSUME(fossil_sanity_validate_integer(valid_input) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
-    FOSSIL_TEST_ASSUME(fossil_sanity_validate_integer(invalid_input) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_validate_integer(valid_input.c_str()) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_validate_integer(invalid_input.c_str()) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
 } // end case
 
 FOSSIL_TEST_CASE(cpp_validate_string) {
-    const char *valid_input = "hello";
-    const char *invalid_input = "hello!";
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyz";
+    std::string valid_input = "hello";
+    std::string invalid_input = "hello!";
+    std::string allowed_chars = "abcdefghijklmnopqrstuvwxyz";
 
     // Test cases
-    FOSSIL_TEST_ASSUME(fossil_sanity_validate_string(valid_input, allowed_chars) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
-    FOSSIL_TEST_ASSUME(fossil_sanity_validate_string(invalid_input, allowed_chars) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_validate_string(valid_input.c_str(), allowed_chars.c_str()) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_validate_string(invalid_input.c_str(), allowed_chars.c_str()) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
 } // end case
 
 FOSSIL_TEST_CASE(cpp_check_message_clarity) {
-    const char *clear_message = "This is a clear message.";
-    const char *unclear_message = "Ths s n clr msg.";
+    std::string clear_message = "This is a clear message.";
+    std::string unclear_message = "Ths s n clr msg.";
 
     // Test cases
-    FOSSIL_TEST_ASSUME(fossil_sanity_check_message_clarity(clear_message) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
-    FOSSIL_TEST_ASSUME(fossil_sanity_check_message_clarity(unclear_message) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_check_message_clarity(clear_message.c_str()) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_check_message_clarity(unclear_message.c_str()) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
 } // end case
 
 FOSSIL_TEST_CASE(cpp_check_grammar) {
-    const char *correct_message = "This is a correct message.";
-    const char *incorrect_message = "This is a incorrect message.";
+    std::string correct_message = "This is a correct message.";
+    std::string incorrect_message = "This is a incorrect message.";
 
     // Test cases
-    FOSSIL_TEST_ASSUME(fossil_sanity_check_grammar(correct_message) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
-    FOSSIL_TEST_ASSUME(fossil_sanity_check_grammar(incorrect_message) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_check_grammar(correct_message.c_str()) == FOSSIL_SANITY_TRUE, "Should have passed the test case");
+    FOSSIL_TEST_ASSUME(fossil_sanity_check_grammar(incorrect_message.c_str()) == FOSSIL_SANITY_FALSE, "Should have passed the test case");
 } // end case
 
 // * * * * * * * * * * * * * * * * * * * * * * * *

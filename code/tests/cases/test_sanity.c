@@ -125,10 +125,6 @@ FOSSIL_TEST_CASE(c_log_message) {
 // * Fossil Logic Test Pool
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(c_sanity_test_cases) {
-    FOSSIL_TEST_ADD(c_sanity_suite, c_validate_integer);
-    FOSSIL_TEST_ADD(c_sanity_suite, c_validate_string);
-    FOSSIL_TEST_ADD(c_sanity_suite, c_check_message_clarity);
-    FOSSIL_TEST_ADD(c_sanity_suite, c_check_grammar);
     FOSSIL_TEST_ADD(c_sanity_suite, c_get_response);
     FOSSIL_TEST_ADD(c_sanity_suite, c_init_config);
     FOSSIL_TEST_ADD(c_sanity_suite, c_parse_args);
