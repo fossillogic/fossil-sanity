@@ -347,7 +347,7 @@ fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message) {
     };
     
     // Check for confusing keywords
-    for (int i = 0; i < sizeof(confusing_keywords) / sizeof(confusing_keywords[0]); i++) {
+    for (size_t i = 0; i < sizeof(confusing_keywords) / sizeof(confusing_keywords[0]); i++) {
         if (strstr(message, confusing_keywords[i])) {
             return DISABLE; // Confusing message found
         }
@@ -355,7 +355,7 @@ fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message) {
 
     // Check for excessive jargon or overly complex words
     const char *complex_keywords[] = {"algorithm", "heuristic", "asynchronous", "depreciation", "concurrency"};
-    for (int i = 0; i < sizeof(complex_keywords) / sizeof(complex_keywords[0]); i++) {
+    for (size_t i = 0; i < sizeof(complex_keywords) / sizeof(complex_keywords[0]); i++) {
         if (strstr(message, complex_keywords[i])) {
             return DISABLE; // Complex terminology detected
         }
@@ -398,7 +398,7 @@ fossil_sanity_bool fossil_sanity_check_grammar(const char *message) {
     const char *verbs[] = {"is", "are", "was", "were", "be", "being", "been", "am", "have", "has", "do", "does", "did"};
     
     // Simplified check for subject-verb agreement
-    for (int i = 0; i < sizeof(verbs) / sizeof(verbs[0]); i++) {
+    for (size_t i = 0; i < sizeof(verbs) / sizeof(verbs[0]); i++) {
         if (strstr(message, verbs[i])) {
             has_verb = 1;
             break;
