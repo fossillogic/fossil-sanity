@@ -74,16 +74,15 @@ FOSSIL_TEST_CASE(cpp_parse_args) {
     fossil_sanity_config config;
     fossil_sanity_init_config(&config);
 
-    // Change to const char*[] to match string literal type
     const char *args1[] = {"program", "debug=enable", "logs=disable", "colors=disable", "show=error"};
-    fossil_sanity_parse_args(5, args1, &config);
+    fossil_sanity_parse_args(5, const_cast<char**>(args1), &config);  // Use const_cast to remove const
     FOSSIL_TEST_ASSUME(config.debug_enabled == ENABLE, "Debug should be enabled");
     FOSSIL_TEST_ASSUME(config.logs_enabled == DISABLE, "Logs should be disabled");
     FOSSIL_TEST_ASSUME(config.use_colors == DISABLE, "Colors should be disabled");
     FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_ERROR, "Log level should be ERROR");
 
     const char *args2[] = {"program", "no-debug", "logs", "no-colors"};
-    fossil_sanity_parse_args(4, args2, &config);
+    fossil_sanity_parse_args(4, const_cast<char**>(args2), &config);  // Use const_cast to remove const
     FOSSIL_TEST_ASSUME(config.debug_enabled == DISABLE, "Debug should be disabled");
     FOSSIL_TEST_ASSUME(config.logs_enabled == ENABLE, "Logs should be enabled");
     FOSSIL_TEST_ASSUME(config.use_colors == DISABLE, "Colors should be disabled");
