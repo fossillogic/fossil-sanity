@@ -74,14 +74,14 @@ FOSSIL_TEST_CASE(cpp_parse_args) {
     fossil_sanity_config config;
     fossil_sanity_init_config(&config);
 
-    std::string args1[] = {"program", "debug=enable", "logs=disable", "colors=disable", "show=error"};
+    char *args1[] = {"program", "debug=enable", "logs=disable", "colors=disable", "show=error"};
     fossil_sanity_parse_args(5, args1, &config);
     FOSSIL_TEST_ASSUME(config.debug_enabled == ENABLE, "Debug should be enabled");
     FOSSIL_TEST_ASSUME(config.logs_enabled == DISABLE, "Logs should be disabled");
     FOSSIL_TEST_ASSUME(config.use_colors == DISABLE, "Colors should be disabled");
     FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_ERROR, "Log level should be ERROR");
 
-    std::string args2[] = {"program", "no-debug", "logs", "no-colors"};
+    char *args2[] = {"program", "no-debug", "logs", "no-colors"};
     fossil_sanity_parse_args(4, args2, &config);
     FOSSIL_TEST_ASSUME(config.debug_enabled == DISABLE, "Debug should be disabled");
     FOSSIL_TEST_ASSUME(config.logs_enabled == ENABLE, "Logs should be enabled");
