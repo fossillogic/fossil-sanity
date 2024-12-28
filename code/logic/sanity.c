@@ -11,7 +11,7 @@
  * Copyright (C) 2024 Fossil Logic. All rights reserved.
  * -----------------------------------------------------------------------------
  */
-#include "fossil/sanity/health.h"
+#include "fossil/sanity/sanity.h"
 #include <stdarg.h>
 #include <ctype.h>
 
@@ -181,6 +181,16 @@ static const char *fossil_sanity_responses[][30] = {
         "Debug: Output verification complete, no issues found."
     }
 };
+
+char *custom_strdup(const char *str) {
+    if (!str) return NULL;
+    size_t len = strlen(str) + 1;
+    char *new_str = malloc(len);
+    if (new_str) {
+        memcpy(new_str, str, len);
+    }
+    return new_str;
+}
 
 // Get a random response based on the log level
 const char *fossil_sanity_get_response(fossil_sanity_log_level level) {
@@ -354,7 +364,7 @@ fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message) {
     // Check for messages that are too short (less than 5 words) or too vague
     int word_count = 0;
     const char *delimiters = " .,!?";
-    char *message_copy = strdup(message);
+    char *message_copy = custom_strdup(message);
     char *token = strtok(message_copy, delimiters);
     while (token != NULL) {
         word_count++;
