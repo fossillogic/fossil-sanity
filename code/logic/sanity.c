@@ -326,21 +326,82 @@ void fossil_sanity_load_config(const char *filename, fossil_sanity_config *confi
     fclose(file);
 }
 
-// Clarity check: simple heuristic for checking confusing messages
+// Clarity check: more robust heuristic for checking confusing messages
 fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message) {
-    // Example checks (can be expanded with more complex logic)
-    const char *confusing_keywords[] = {"error", "confusing", "complicated", "unintelligible", "undefined"};
+    // Example checks for common confusing words or phrases
+    const char *confusing_keywords[] = {
+        "error", "confusing", "complicated", "unintelligible", "undefined", 
+        "failure", "incorrect", "issue", "problem", "not working", 
+        "crash", "does not compute", "unexpected", "unknown", "complex", 
+        "malfunction", "corrupted", "missing", "unsolvable", "fatal"
+    };
+    
+    // Check for confusing keywords
     for (int i = 0; i < sizeof(confusing_keywords) / sizeof(confusing_keywords[0]); i++) {
         if (strstr(message, confusing_keywords[i])) {
             return DISABLE; // Confusing message found
         }
     }
+
+    // Check for excessive jargon or overly complex words
+    const char *complex_keywords[] = {"algorithm", "heuristic", "asynchronous", "depreciation", "concurrency"};
+    for (int i = 0; i < sizeof(complex_keywords) / sizeof(complex_keywords[0]); i++) {
+        if (strstr(message, complex_keywords[i])) {
+            return DISABLE; // Complex terminology detected
+        }
+    }
+
+    // Check for messages that are too short (less than 5 words) or too vague
+    int word_count = 0;
+    const char *delimiters = " .,!?";
+    char *message_copy = strdup(message);
+    char *token = strtok(message_copy, delimiters);
+    while (token != NULL) {
+        word_count++;
+        token = strtok(NULL, delimiters);
+    }
+    free(message_copy);
+
+    if (word_count < 5) {
+        return DISABLE; // Too few words to be meaningful
+    }
+
     return ENABLE; // Message is clear
 }
 
-// Simple grammar check: looks for incomplete sentences (missing subject or verb)
+// Simple grammar check: enhanced to check for sentence structure and avoid fragments
 fossil_sanity_bool fossil_sanity_check_grammar(const char *message) {
-    if (!message || strlen(message) < 5) return DISABLE;
-    if (strchr(message, '.') == NULL) return DISABLE; // Ensure it is not an incomplete sentence
-    return ENABLE;
+    if (!message || strlen(message) < 5) return DISABLE; // Too short to be a proper sentence
+
+    // Check for sentence-ending punctuation (., !, ?)
+    if (strchr(message, '.') == NULL && strchr(message, '!') == NULL && strchr(message, '?') == NULL) {
+        return DISABLE; // No sentence-ending punctuation
+    }
+
+    // Check if the first character is a capital letter (helps to identify proper sentences)
+    if (!isupper(message[0])) {
+        return DISABLE; // Sentence doesn't start with a capital letter
+    }
+
+    // Look for fragments: ensure at least one subject-verb structure
+    int has_verb = 0, has_subject = 0;
+    const char *verbs[] = {"is", "are", "was", "were", "be", "being", "been", "am", "have", "has", "do", "does", "did"};
+    
+    // Simplified check for subject-verb agreement
+    for (int i = 0; i < sizeof(verbs) / sizeof(verbs[0]); i++) {
+        if (strstr(message, verbs[i])) {
+            has_verb = 1;
+            break;
+        }
+    }
+
+    if (has_verb) {
+        has_subject = 1; // Assume subject exists if verb is found (simplification)
+    }
+
+    if (!has_verb || !has_subject) {
+        return DISABLE; // Sentence might be incomplete or a fragment
+    }
+
+    return ENABLE; // Grammar looks fine
 }
