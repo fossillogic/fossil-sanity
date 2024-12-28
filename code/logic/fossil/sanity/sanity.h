@@ -29,6 +29,11 @@ typedef int fossil_sanity_bool;
 extern "C" {
 #endif
 
+enum {
+    FOSSIL_SANITY_TRUE = ENABLE,
+    FOSSIL_SANITY_FALSE = DISABLE
+};
+
 /**
  * @enum fossil_sanity_log_level
  * @brief Enumeration of log levels.
