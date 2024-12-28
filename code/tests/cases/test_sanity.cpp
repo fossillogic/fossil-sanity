@@ -53,7 +53,7 @@ FOSSIL_TEST_CASE(cpp_get_response) {
         FOSSIL_SANITY_LOG_DEBUG
     };
 
-    for (int i = 0; i < sizeof(levels) / sizeof(levels[0]); i++) {
+    for (size_t i = 0; i < sizeof(levels) / sizeof(levels[0]); i++) {
         const char *response = fossil_sanity_get_response(levels[i]);
         FOSSIL_TEST_ASSUME(response != NULL, "Response should not be NULL");
     }
