@@ -400,9 +400,22 @@ void fossil_sanity_load_config(const char *filename, fossil_sanity_config *confi
     fclose(file);
 }
 
+int fossil_sanity_strcasecmp(const char *s1, const char *s2) {
+    while (*s1 && *s2) {
+        char c1 = tolower((unsigned char)*s1);
+        char c2 = tolower((unsigned char)*s2);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+        s1++;
+        s2++;
+    }
+    return tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
+}
+
 bool is_in_array(const char *word, const char *array[], size_t array_size) {
     for (size_t i = 0; i < array_size; i++) {
-        if (strcasecmp(word, array[i]) == 0) {
+        if (fossil_sanity_strcasecmp(word, array[i]) == 0) {
             return true;
         }
     }
@@ -422,8 +435,7 @@ bool fossil_sanity_check_message_clarity(const char *message) {
 
     size_t word_count = 0;
     size_t noun_count = 0, verb_count = 0, adj_count = 0, rotbrain_count = 0;
-    char *saveptr = NULL;
-    char *token = strtok_r(message_copy, delimiters, &saveptr);
+    char *token = strtok(message_copy, delimiters);
 
     while (token) {
         word_count++;
@@ -438,7 +450,7 @@ bool fossil_sanity_check_message_clarity(const char *message) {
             rotbrain_count++;
         }
 
-        token = strtok_r(NULL, delimiters, &saveptr);
+        token = strtok(NULL, delimiters);
     }
 
     free(message_copy);
@@ -468,8 +480,7 @@ bool fossil_sanity_check_grammar(const char *message) {
     bool has_adj_or_prep = false;
     bool rotbrain_used = false;
 
-    char *saveptr = NULL;
-    char *token = strtok_r(message_copy, delimiters, &saveptr);
+    char *token = strtok(message_copy, delimiters);
 
     while (token) {
         if (is_in_array(token, ARTICLES, sizeof(ARTICLES) / sizeof(ARTICLES[0]))) {
@@ -493,7 +504,7 @@ bool fossil_sanity_check_grammar(const char *message) {
             rotbrain_used = true;
         }
 
-        token = strtok_r(NULL, delimiters, &saveptr);
+        token = strtok(NULL, delimiters);
     }
 
     free(message_copy);
