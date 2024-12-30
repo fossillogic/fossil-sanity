@@ -182,6 +182,42 @@ static const char *fossil_sanity_responses[][30] = {
     }
 };
 
+const char *ARTICLES[] = {
+    "a", "an", "the"
+};
+
+const char *NOUNS[] = {
+    "message", "example", "sentence", "structure", "clarity", "grammar", "system", "operation", "task", "process",
+    "result", "issue", "error", "failure", "problem", "configuration", "output", "input", "log", "level", "response",
+    "action", "attention", "behavior", "check", "details", "execution", "intervention", "performance", "settings",
+    "shutdown", "stability", "status", "verification"
+};
+
+const char *VERBS[] = {
+    "is", "are", "was", "were", "be", "being", "been", "has", "have", "does", "do", "completed",
+    "detected", "encountered", "executed", "failed", "found", "halted", "interrupted", "logged", "matched", "observed",
+    "passed", "performed", "proceeded", "processed", "recovered", "required", "returned", "running", "showed", "terminated",
+    "validated", "verified"
+};
+
+const char *PREPOSITIONS[] = {
+    "in", "on", "at", "since", "for", "ago", "before", "to", "past", "by", "about", "under", "over", "with", "without", "between", "among"
+};
+
+const char *ADJECTIVES[] = {
+    "clear", "good", "writing", "valid", "understandable", "correct", "incorrect", "poor", "vague", "long", "short",
+    "unusual", "minor", "critical", "unexpected", "invalid", "unrecoverable", "unstable", "severe", "major", "immediate",
+    "system-wide", "internal", "verbose", "normal", "expected", "successful", "flawless", "timely", "optimal", "unresponsive",
+    "unrecoverable", "compromised", "unrecoverable", "essential", "severe", "major", "senior"
+};
+
+const char *ROTBRAIN[] = {
+    "rizz", "skibidi", "yeet", "sus", "vibe", "lit", "no cap", "bet", "fam", "bruh",
+    "flex", "ghost", "goat", "gucci", "hype", "janky", "lowkey", "mood", "salty", "shade",
+    "slay", "snatched", "stan", "tea", "thirsty", "woke", "yolo", "zaddy", "drip", "fire"
+};
+
+
 char *custom_strdup(const char *str) {
     if (!str) return NULL;
     size_t len = strlen(str) + 1;
@@ -213,11 +249,15 @@ static const char *fossil_sanity_color_codes[] = {
 
 // Initialize configuration
 void fossil_sanity_init_config(fossil_sanity_config *config) {
-    config->debug_enabled = DISABLE;
-    config->logs_enabled = ENABLE;
+    if (!config) {
+        return;
+    }
+
+    config->debug_enabled = false;
+    config->logs_enabled = true;
     config->log_level = FOSSIL_SANITY_LOG_WARN;
     config->log_output = NULL;
-    config->use_colors = ENABLE;
+    config->use_colors = true;
 }
 
 // Log with filtering and colors
@@ -266,57 +306,81 @@ const char *fossil_sanity_get_color_code(fossil_sanity_log_level level) {
     return fossil_sanity_color_codes[level];
 }
 
-// Parse command-line arguments (with and without `=` sign)
+void show_usage(void) {
+    printf("Usage: program [options]\n");
+    printf("Options:\n");
+    printf("  --debug          Enable debug mode\n");
+    printf("  --no-debug       Disable debug mode\n");
+    printf("  --logs           Enable logging\n");
+    printf("  --no-logs        Disable logging\n");
+    printf("  --colors         Enable colored output\n");
+    printf("  --no-colors      Disable colored output\n");
+    printf("  --show-prod      Set log level to PROD\n");
+    printf("  --show-warn      Set log level to WARN\n");
+    printf("  --show-error     Set log level to ERROR\n");
+    printf("  --show-critical  Set log level to CRITICAL\n");
+    printf("  --show-debug     Set log level to DEBUG\n");
+    printf("  --help           Display this help message\n");
+    printf("  --version        Display the program version\n");
+}
+
 void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *config) {
     for (int i = 1; i < argc; ++i) {
         char *arg = argv[i];
 
-        if (strstr(arg, "=")) {
-            char *key = strtok(arg, "=");
-            char *value = strtok(NULL, "=");
-
-            if (strcmp(key, "debug") == 0) {
-                config->debug_enabled = (strcmp(value, "enable") == 0) ? ENABLE : DISABLE;
-            } else if (strcmp(key, "logs") == 0) {
-                config->logs_enabled = (strcmp(value, "enable") == 0) ? ENABLE : DISABLE;
-            } else if (strcmp(key, "colors") == 0) {
-                config->use_colors = (strcmp(value, "enable") == 0) ? ENABLE : DISABLE;
-            } else if (strcmp(key, "show") == 0) {
-                if (strcmp(value, "prod") == 0) config->log_level = FOSSIL_SANITY_LOG_PROD;
-                else if (strcmp(value, "warn") == 0) config->log_level = FOSSIL_SANITY_LOG_WARN;
-                else if (strcmp(value, "error") == 0) config->log_level = FOSSIL_SANITY_LOG_ERROR;
-                else if (strcmp(value, "critical") == 0) config->log_level = FOSSIL_SANITY_LOG_CRITICAL;
-                else if (strcmp(value, "debug") == 0) config->log_level = FOSSIL_SANITY_LOG_DEBUG;
-            }
+        // Handle each argument as a flag or option
+        if (strcmp(arg, "--debug") == 0) {
+            config->debug_enabled = true;
+        } else if (strcmp(arg, "--no-debug") == 0) {
+            config->debug_enabled = false;
+        } else if (strcmp(arg, "--logs") == 0) {
+            config->logs_enabled = true;
+        } else if (strcmp(arg, "--no-logs") == 0) {
+            config->logs_enabled = false;
+        } else if (strcmp(arg, "--colors") == 0) {
+            config->use_colors = true;
+        } else if (strcmp(arg, "--no-colors") == 0) {
+            config->use_colors = false;
+        } else if (strcmp(arg, "--show-prod") == 0) {
+            config->log_level = FOSSIL_SANITY_LOG_PROD;
+        } else if (strcmp(arg, "--show-warn") == 0) {
+            config->log_level = FOSSIL_SANITY_LOG_WARN;
+        } else if (strcmp(arg, "--show-error") == 0) {
+            config->log_level = FOSSIL_SANITY_LOG_ERROR;
+        } else if (strcmp(arg, "--show-critical") == 0) {
+            config->log_level = FOSSIL_SANITY_LOG_CRITICAL;
+        } else if (strcmp(arg, "--show-debug") == 0) {
+            config->log_level = FOSSIL_SANITY_LOG_DEBUG;
+        } else if (strcmp(arg, "--help") == 0) {
+            show_usage();
+            exit(0);
+        } else if (strcmp(arg, "--version") == 0) {
+            puts("Fossil Sanity version 0.1.0\n");
+            exit(0);
         } else {
-            if (strcmp(arg, "debug") == 0) config->debug_enabled = ENABLE;
-            else if (strcmp(arg, "no-debug") == 0) config->debug_enabled = DISABLE;
-            else if (strcmp(arg, "logs") == 0) config->logs_enabled = ENABLE;
-            else if (strcmp(arg, "no-logs") == 0) config->logs_enabled = DISABLE;
-            else if (strcmp(arg, "colors") == 0) config->use_colors = ENABLE;
-            else if (strcmp(arg, "no-colors") == 0) config->use_colors = DISABLE;
+            fprintf(stderr, "Warning: Unknown argument '%s'.\n", arg);
         }
     }
 }
 
 // Validate if input is an integer
 bool fossil_sanity_validate_integer(const char *input) {
-    if (!input || *input == '\0') return DISABLE;
+    if (!input || *input == '\0') return false;
     while (*input) {
-        if (!isdigit(*input)) return DISABLE;
+        if (!isdigit(*input)) return false;
         input++;
     }
-    return ENABLE;
+    return true;
 }
 
 // Validate if input string contains only allowed characters
 bool fossil_sanity_validate_string(const char *input, const char *allowed_chars) {
-    if (!input || !allowed_chars) return DISABLE;
+    if (!input || !allowed_chars) return false;
     while (*input) {
-        if (!strchr(allowed_chars, *input)) return DISABLE;
+        if (!strchr(allowed_chars, *input)) return false;
         input++;
     }
-    return ENABLE;
+    return true;
 }
 
 // Load configuration from INI file
@@ -336,82 +400,108 @@ void fossil_sanity_load_config(const char *filename, fossil_sanity_config *confi
     fclose(file);
 }
 
-// Clarity check: more robust heuristic for checking confusing messages
-bool fossil_sanity_check_message_clarity(const char *message) {
-    // Example checks for common confusing words or phrases
-    const char *confusing_keywords[] = {
-        "error", "confusing", "complicated", "unintelligible", "undefined", 
-        "failure", "incorrect", "issue", "problem", "not working", 
-        "crash", "does not compute", "unexpected", "unknown", "complex", 
-        "malfunction", "corrupted", "missing", "unsolvable", "fatal"
-    };
-    
-    // Check for confusing keywords
-    for (size_t i = 0; i < sizeof(confusing_keywords) / sizeof(confusing_keywords[0]); i++) {
-        if (strstr(message, confusing_keywords[i])) {
-            return DISABLE; // Confusing message found
+bool is_in_array(const char *word, const char *array[], size_t array_size) {
+    for (size_t i = 0; i < array_size; i++) {
+        if (strcasecmp(word, array[i]) == 0) {
+            return true;
         }
     }
-
-    // Check for excessive jargon or overly complex words
-    const char *complex_keywords[] = {"algorithm", "heuristic", "asynchronous", "depreciation", "concurrency"};
-    for (size_t i = 0; i < sizeof(complex_keywords) / sizeof(complex_keywords[0]); i++) {
-        if (strstr(message, complex_keywords[i])) {
-            return DISABLE; // Complex terminology detected
-        }
-    }
-
-    // Check for messages that are too short (less than 5 words) or too vague
-    int word_count = 0;
-    const char *delimiters = " .,!?";
-    char *message_copy = custom_strdup(message);
-    char *token = strtok(message_copy, delimiters);
-    while (token != NULL) {
-        word_count++;
-        token = strtok(NULL, delimiters);
-    }
-    free(message_copy);
-
-    if (word_count < 5) {
-        return DISABLE; // Too few words to be meaningful
-    }
-
-    return ENABLE; // Message is clear
+    return false;
 }
 
-// Simple grammar check: enhanced to check for sentence structure and avoid fragments
-bool fossil_sanity_check_grammar(const char *message) {
-    if (!message || strlen(message) < 5) return DISABLE; // Too short to be a proper sentence
-
-    // Check for sentence-ending punctuation (., !, ?)
-    if (strchr(message, '.') == NULL && strchr(message, '!') == NULL && strchr(message, '?') == NULL) {
-        return DISABLE; // No sentence-ending punctuation
+bool fossil_sanity_check_message_clarity(const char *message) {
+    if (!message || strlen(message) == 0) {
+        return false; // Empty message
     }
 
-    // Check if the first character is a capital letter (helps to identify proper sentences)
-    if (!isupper(message[0])) {
-        return DISABLE; // Sentence doesn't start with a capital letter
+    const char *delimiters = " .,!?";
+    char *message_copy = custom_strdup(message);
+    if (!message_copy) {
+        return false;
     }
 
-    // Look for fragments: ensure at least one subject-verb structure
-    int has_verb = 0, has_subject = 0;
-    const char *verbs[] = {"is", "are", "was", "were", "be", "being", "been", "am", "have", "has", "do", "does", "did"};
-    
-    // Simplified check for subject-verb agreement
-    for (size_t i = 0; i < sizeof(verbs) / sizeof(verbs[0]); i++) {
-        if (strstr(message, verbs[i])) {
-            has_verb = 1;
-            break;
+    size_t word_count = 0;
+    size_t noun_count = 0, verb_count = 0, adj_count = 0, rotbrain_count = 0;
+    char *saveptr = NULL;
+    char *token = strtok_r(message_copy, delimiters, &saveptr);
+
+    while (token) {
+        word_count++;
+        
+        if (is_in_array(token, NOUNS, sizeof(NOUNS) / sizeof(NOUNS[0]))) {
+            noun_count++;
+        } else if (is_in_array(token, VERBS, sizeof(VERBS) / sizeof(VERBS[0]))) {
+            verb_count++;
+        } else if (is_in_array(token, ADJECTIVES, sizeof(ADJECTIVES) / sizeof(ADJECTIVES[0]))) {
+            adj_count++;
+        } else if (is_in_array(token, ROTBRAIN, sizeof(ROTBRAIN) / sizeof(ROTBRAIN[0]))) {
+            rotbrain_count++;
         }
+
+        token = strtok_r(NULL, delimiters, &saveptr);
     }
 
-    if (has_verb) {
-        has_subject = 1; // Assume subject exists if verb is found (simplification)
+    free(message_copy);
+
+    // Check message clarity criteria
+    if (noun_count > 0 && verb_count > 0 && adj_count > 0 && rotbrain_count < 3 && word_count <= 20) {
+        return true; // Message is clear
     }
 
-    if (!has_verb || !has_subject) {
-        return DISABLE; // Sentence might be incomplete or a fragment
+    return false; // Message is unclear
+}
+
+bool fossil_sanity_check_grammar(const char *message) {
+    if (!message || strlen(message) == 0) {
+        return false; // Empty message
     }
 
-    return ENABLE; // Grammar looks fine
+    const char *delimiters = " .,!?";
+    char *message_copy = custom_strdup(message);
+    if (!message_copy) {
+        return false;
+    }
+
+    bool started_with_article = false;
+    bool has_verb = false;
+    bool has_noun = false;
+    bool has_adj_or_prep = false;
+    bool rotbrain_used = false;
+
+    char *saveptr = NULL;
+    char *token = strtok_r(message_copy, delimiters, &saveptr);
+
+    while (token) {
+        if (is_in_array(token, ARTICLES, sizeof(ARTICLES) / sizeof(ARTICLES[0]))) {
+            started_with_article = true;
+        }
+
+        if (is_in_array(token, NOUNS, sizeof(NOUNS) / sizeof(NOUNS[0]))) {
+            has_noun = true;
+        }
+
+        if (is_in_array(token, VERBS, sizeof(VERBS) / sizeof(VERBS[0]))) {
+            has_verb = true;
+        }
+
+        if (is_in_array(token, ADJECTIVES, sizeof(ADJECTIVES) / sizeof(ADJECTIVES[0])) || 
+            is_in_array(token, PREPOSITIONS, sizeof(PREPOSITIONS) / sizeof(PREPOSITIONS[0]))) {
+            has_adj_or_prep = true;
+        }
+
+        if (is_in_array(token, ROTBRAIN, sizeof(ROTBRAIN) / sizeof(ROTBRAIN[0]))) {
+            rotbrain_used = true;
+        }
+
+        token = strtok_r(NULL, delimiters, &saveptr);
+    }
+
+    free(message_copy);
+
+    // Grammar validation criteria:
+    if (started_with_article && has_noun && has_verb && has_adj_or_prep && !rotbrain_used) {
+        return true; // Message has valid grammar
+    }
+
+    return false; // Invalid grammar
 }
