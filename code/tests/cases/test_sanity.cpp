@@ -116,42 +116,7 @@ FOSSIL_TEST_CASE(cpp_parse_args) {
     FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_PROD, "Log level should be PROD");
 } // end case
 
-FOSSIL_TEST_CASE(cpp_load_config) {
-    fossil_sanity_config config;
-    fossil_sanity_init_config(&config);
-
-    // Assuming a config file named "test_config.ini" exists with appropriate settings
-    fossil_sanity_load_config("test_config.ini", &config);
-
-    // Validate the loaded configuration (assuming known values in the config file)
-    FOSSIL_TEST_ASSUME(config.debug_enabled == true, "Debug should be enabled from config file");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled from config file");
-    FOSSIL_TEST_ASSUME(config.use_colors == true, "Colors should be enabled from config file");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_DEBUG, "Log level should be DEBUG from config file");
-} // end case
-
-FOSSIL_TEST_CASE(cpp_log_message) {
-    fossil_sanity_config config;
-    fossil_sanity_init_config(&config);
-
-    // Redirect log output to a file for testing
-    FILE *log_file = fopen("test_log.txt", "w");
-    config.log_output = log_file;
-
-    fossil_sanity_log(&config, FOSSIL_SANITY_LOG_WARN, "This is a test warning message.");
-    fclose(log_file);
-
-    // Validate the log file content
-    log_file = fopen("test_log.txt", "r");
-    std::string log_content;
-    char buffer[256];
-    while (fgets(buffer, sizeof(buffer), log_file)) {
-        log_content += buffer;
-    }
-    fclose(log_file);
-
-    FOSSIL_TEST_ASSUME(log_content.find("This is a test warning message.") != std::string::npos, "Log message should be present in the log file");
-} // end case
+// In need of test cases for log messages, seem to be held back due to Fossil Test laking a way to mock IO.
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
 // * Fossil Logic Test Pool
@@ -160,8 +125,6 @@ FOSSIL_TEST_GROUP(cpp_sanity_test_cases) {
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_get_response);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_init_config);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_parse_args);
-    // FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_load_config);
-    // FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_log_message);
 
     FOSSIL_TEST_REGISTER(cpp_sanity_suite);
 } // end of group
