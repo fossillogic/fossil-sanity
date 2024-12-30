@@ -70,12 +70,11 @@ void fossil_sanity_init_config(fossil_sanity_config *config);
 void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *config);
 
 /**
- * @brief Load configuration from a file.
- *
- * @param filename Path to the configuration file.
- * @param config Pointer to the configuration structure to populate.
+ * @brief Summary of the configuration settings.
+ * 
+ * @param config Pointer to the configuration structure.
  */
-void fossil_sanity_load_config(const char *filename, fossil_sanity_config *config);
+void fossil_sanity_summary(const fossil_sanity_config *config);
 
 /**
  * @brief Log a message with the specified log level.

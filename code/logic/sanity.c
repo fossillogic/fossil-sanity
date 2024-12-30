@@ -217,6 +217,39 @@ const char *ROTBRAIN[] = {
     "slay", "snatched", "stan", "tea", "thirsty", "woke", "yolo", "zaddy", "drip", "fire"
 };
 
+// List of offensive words and phrases (super hard to mainting thisw list as GitHub Copilot doesnt wanna help with this part of the SOAP API)
+static const char *OFFENSIVE[] = {
+    "curse1",
+    "curse2",
+    "racist_phrase1",
+    "racist_phrase2", // for demo and unit testing we keep these four keywords
+
+    // English offensive words and phrases
+    "2g1c", "2 girls 1 cup", "acrotomophilia", "alabama hot pocket", "alaskan pipeline", "anal", "anilingus", "anus", "apeshit", "arsehole", "ass", "asshole", "assmunch", "auto erotic", "autoerotic", "babeland",
+    "baby batter", "baby juice", "ball gag", "ball gravy", "ball kicking", "ball licking", "ball sack", "ball sucking", "bangbros", "bareback", "barely legal", "barenaked", "bastard", "bastardo", "bastinado", "bbw",
+    "bdsm", "beaner", "beaners", "beaver cleaver", "beaver lips", "bestiality", "big black", "big breasts", "big knockers", "big tits", "bimbos", "birdlock", "bitch", "bitches", "black cock", "blonde action", "blonde on blonde action",
+    "blowjob", "blow job", "blow your load", "blue waffle", "blumpkin", "bollocks", "bondage", "boner", "boob", "boobs", "booty call", "brown showers", "brunette action", "bukkake", "bulldyke", "bullet vibe", "bullshit",
+    "bung hole", "bunghole", "busty", "butt", "buttcheeks", "butthole", "camel toe", "camgirl", "camslut", "camwhore", "carpet muncher", "carpetmuncher", "chocolate rosebuds", "circlejerk", "cleveland steamer", "clit",
+    "clitoris", "clover clamps", "clusterfuck", "cock", "cocks", "coprolagnia", "coprophilia", "cornhole", "coon", "coons", "creampie", "cum", "cumming", "cunnilingus", "cunt", "darkie", "date rape", "daterape",
+    "deep throat", "deepthroat", "dendrophilia", "dick", "dildo", "dingleberry", "dingleberries", "dirty pillows", "dirty sanchez", "doggie style", "doggiestyle", "doggy style", "doggystyle", "dog style", "dolcett",
+    "domination", "dominatrix", "dommes", "donkey punch", "double dong", "double penetration", "dp action", "dry hump", "dvda", "eat my ass", "ecchi", "ejaculation", "erotic", "erotism", "escort", "eunuch", "faggot",
+    "fecal", "felch", "fellatio", "feltch", "female squirting", "femdom", "figging", "fingerbang", "fingering", "fisting", "foot fetish", "footjob", "frotting", "fuck", "fuck buttons", "fuckin", "fucking", "fucktards",
+    "fudge packer", "fudgepacker", "futanari", "gang bang", "gay sex", "genitals", "giant cock", "girl on", "girl on top", "girls gone wild", "goatcx", "goatse", "god damn", "gokkun", "golden shower", "goodpoop",
+    "goo girl", "goregasm", "grope", "group sex", "g-spot", "guro", "hand job", "handjob", "hard core", "hardcore", "hentai", "homoerotic", "honkey", "hooker", "hot carl", "hot chick", "how to kill", "how to murder",
+    "huge fat", "humping", "incest", "intercourse", "jack off", "jail bait", "jailbait", "jelly donut", "jerk off", "jigaboo", "jiggaboo", "jiggerboo", "jizz", "juggs", "kike", "kinbaku", "kinkster", "kinky", "knobbing",
+    "leather restraint", "leather straight jacket", "lemon party", "lolita", "lovemaking", "make me come", "male squirting", "masturbate", "menage a trois", "milf", "missionary position", "motherfucker", "mound of venus",
+    "mr hands", "muff diver", "muffdiving", "nambla", "nawashi", "negro", "neonazi", "nigga", "nigger", "nig nog", "nimphomania", "nipple", "nipples", "nsfw images", "nude", "nudity", "nympho", "nymphomania", "octopussy",
+    "omorashi", "one cup two girls", "one guy one jar", "orgasm", "orgy", "paedophile", "paki", "panties", "panty", "pedobear", "pedophile", "pegging", "penis", "phone sex", "piece of shit", "pissing", "piss pig", "pisspig",
+    "playboy", "pleasure chest", "pole smoker", "ponyplay", "poof", "poon", "poontang", "punany", "poop chute", "poopchute", "porn", "porno", "pornography", "prince albert piercing", "pthc", "pubes", "pussy", "queaf", "queef",
+    "quim", "raghead", "raging boner", "rape", "raping", "rapist", "rectum", "reverse cowgirl", "rimjob", "rimming", "rosy palm", "rosy palm and her 5 sisters", "rusty trombone", "sadism", "santorum", "scat", "schlong",
+    "scissoring", "semen", "sex", "sexo", "sexy", "shaved beaver", "shaved pussy", "shemale", "shibari", "shit", "shitblimp", "shitty", "shota", "shrimping", "skeet", "slanteye", "slut", "s&m", "smut", "snatch", "snowballing",
+    "sodomize", "sodomy", "spic", "splooge", "splooge moose", "spooge", "spread legs", "spunk", "strap on", "strapon", "strappado", "strip club", "style doggy", "suck", "sucks", "suicide girls", "sultry women", "swastika",
+    "swinger", "tainted love", "taste my", "tea bagging", "threesome", "throating", "tied up", "tight white", "tit", "tits", "titties", "titty", "tongue in a", "topless", "tosser", "towelhead", "tranny", "tribadism",
+    "tub girl", "tubgirl", "tushy", "twat", "twink", "twinkie", "two girls one cup", "undressing", "upskirt", "urethra play", "urophilia", "vagina", "venus mound", "vibrator", "violet wand", "vorarephilia", "voyeur", "vulva",
+    "wank", "wetback", "wet dream", "white power", "wrapping men", "wrinkled starfish", "xx", "xxx", "yaoi", "yellow showers", "yiffy", "zoophilia"
+
+    // Support for other languages can be added via PR to this repository
+};
 
 char *custom_strdup(const char *str) {
     if (!str) return NULL;
@@ -241,6 +274,33 @@ int custom_strcasecmp(const char *s1, const char *s2) {
     return (unsigned char)tolower((unsigned char)*s1) - (unsigned char)tolower((unsigned char)*s2);
 }
 
+bool is_in_array(const char *word, const char *array[], size_t array_size) {
+    for (size_t i = 0; i < array_size; i++) {
+        if (custom_strcasecmp(word, array[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void show_usage(void) {
+    printf("Usage: program [options]\n");
+    printf("Options:\n");
+    printf("  --debug          Enable debug mode\n");
+    printf("  --no-debug       Disable debug mode\n");
+    printf("  --logs           Enable logging\n");
+    printf("  --no-logs        Disable logging\n");
+    printf("  --colors         Enable colored output\n");
+    printf("  --no-colors      Disable colored output\n");
+    printf("  --show-prod      Set log level to PROD\n");
+    printf("  --show-warn      Set log level to WARN\n");
+    printf("  --show-error     Set log level to ERROR\n");
+    printf("  --show-critical  Set log level to CRITICAL\n");
+    printf("  --show-debug     Set log level to DEBUG\n");
+    printf("  --help           Display this help message\n");
+    printf("  --version        Display the program version\n");
+}
+
 // Get a random response based on the log level
 const char *fossil_sanity_get_response(fossil_sanity_log_level level) {
     srand((unsigned int)time(NULL));
@@ -260,6 +320,10 @@ static const char *fossil_sanity_color_codes[] = {
 // Reset color
 #define COLOR_RESET "\033[0m"
 
+// ============================================================================
+// Fossil Sanity ini logic
+// ============================================================================
+
 // Initialize configuration
 void fossil_sanity_init_config(fossil_sanity_config *config) {
     if (!config) {
@@ -271,6 +335,15 @@ void fossil_sanity_init_config(fossil_sanity_config *config) {
     config->log_level = FOSSIL_SANITY_LOG_WARN;
     config->log_output = NULL;
     config->use_colors = true;
+}
+
+// ============================================================================
+// Core logging functionality
+// ============================================================================
+
+// Get color code based on log level
+const char *fossil_sanity_get_color_code(fossil_sanity_log_level level) {
+    return fossil_sanity_color_codes[level];
 }
 
 // Log with filtering and colors
@@ -314,28 +387,9 @@ void fossil_sanity_log(const fossil_sanity_config *config, fossil_sanity_log_lev
     va_end(args);
 }
 
-// Get color code based on log level
-const char *fossil_sanity_get_color_code(fossil_sanity_log_level level) {
-    return fossil_sanity_color_codes[level];
-}
-
-void show_usage(void) {
-    printf("Usage: program [options]\n");
-    printf("Options:\n");
-    printf("  --debug          Enable debug mode\n");
-    printf("  --no-debug       Disable debug mode\n");
-    printf("  --logs           Enable logging\n");
-    printf("  --no-logs        Disable logging\n");
-    printf("  --colors         Enable colored output\n");
-    printf("  --no-colors      Disable colored output\n");
-    printf("  --show-prod      Set log level to PROD\n");
-    printf("  --show-warn      Set log level to WARN\n");
-    printf("  --show-error     Set log level to ERROR\n");
-    printf("  --show-critical  Set log level to CRITICAL\n");
-    printf("  --show-debug     Set log level to DEBUG\n");
-    printf("  --help           Display this help message\n");
-    printf("  --version        Display the program version\n");
-}
+// ============================================================================
+// Configuration loading
+// ============================================================================
 
 void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *config) {
     for (int i = 1; i < argc; ++i) {
@@ -376,7 +430,10 @@ void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *conf
     }
 }
 
-// Validate if input is an integer
+// ============================================================================
+// User input validation
+// ============================================================================
+
 bool fossil_sanity_validate_integer(const char *input) {
     if (!input || *input == '\0') return false;
     while (*input) {
@@ -396,31 +453,9 @@ bool fossil_sanity_validate_string(const char *input, const char *allowed_chars)
     return true;
 }
 
-// Load configuration from INI file
-void fossil_sanity_load_config(const char *filename, fossil_sanity_config *config) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        fprintf(stderr, "[ERROR] Unable to open config file: %s\n", filename);
-        return;
-    }
-
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        line[strcspn(line, "\n")] = 0; // Remove newline character
-        fossil_sanity_parse_args(2, (char*[]){line, line}, config);
-    }
-
-    fclose(file);
-}
-
-bool is_in_array(const char *word, const char *array[], size_t array_size) {
-    for (size_t i = 0; i < array_size; i++) {
-        if (custom_strcasecmp(word, array[i]) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
+// ============================================================================
+// NLP related functions
+// ============================================================================
 
 bool fossil_sanity_check_message_clarity(const char *message) {
     if (!message || strlen(message) == 0) {
@@ -434,7 +469,7 @@ bool fossil_sanity_check_message_clarity(const char *message) {
     }
 
     size_t word_count = 0;
-    size_t noun_count = 0, verb_count = 0, adj_count = 0, rotbrain_count = 0;
+    size_t noun_count = 0, verb_count = 0, adj_count = 0, rotbrain_count = 0, offensive_count = 0;
     char *token = strtok(message_copy, delimiters);
 
     while (token) {
@@ -448,6 +483,8 @@ bool fossil_sanity_check_message_clarity(const char *message) {
             adj_count++;
         } else if (is_in_array(token, ROTBRAIN, sizeof(ROTBRAIN) / sizeof(ROTBRAIN[0]))) {
             rotbrain_count++;
+        } else if (is_in_array(token, OFFENSIVE, sizeof(OFFENSIVE) / sizeof(OFFENSIVE[0]))) {
+            offensive_count++;
         }
 
         token = strtok(NULL, delimiters);
@@ -455,7 +492,7 @@ bool fossil_sanity_check_message_clarity(const char *message) {
 
     free(message_copy);
 
-    if (noun_count > 0 && verb_count > 0 && adj_count > 0 && rotbrain_count < 3 && word_count <= 20) {
+    if (noun_count > 0 && verb_count > 0 && adj_count > 0 && rotbrain_count < 3 && offensive_count == 0 && word_count <= 20) {
         return true;
     }
 
@@ -478,6 +515,7 @@ bool fossil_sanity_check_grammar(const char *message) {
     bool has_noun = false;
     bool has_adj_or_prep = false;
     bool rotbrain_used = false;
+    bool offensive_used = false;
 
     char *token = strtok(message_copy, delimiters);
 
@@ -503,12 +541,16 @@ bool fossil_sanity_check_grammar(const char *message) {
             rotbrain_used = true;
         }
 
+        if (is_in_array(token, OFFENSIVE, sizeof(OFFENSIVE) / sizeof(OFFENSIVE[0]))) {
+            offensive_used = true;
+        }
+
         token = strtok(NULL, delimiters);
     }
 
     free(message_copy);
 
-    if (started_with_article && has_noun && has_verb && has_adj_or_prep && !rotbrain_used) {
+    if (started_with_article && has_noun && has_verb && has_adj_or_prep && !rotbrain_used && !offensive_used) {
         return true;
     }
 
