@@ -20,17 +20,13 @@
 #include <stdbool.h>
 #include <time.h>
 
-// Boolean values
-#define ENABLE  1
-#define DISABLE 0
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 enum {
-    FOSSIL_SANITY_TRUE = ENABLE,
-    FOSSIL_SANITY_FALSE = DISABLE
+    FOSSIL_SANITY_TRUE = true,
+    FOSSIL_SANITY_FALSE = false
 };
 
 /**
