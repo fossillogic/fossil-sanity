@@ -300,7 +300,7 @@ void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *conf
 }
 
 // Validate if input is an integer
-fossil_sanity_bool fossil_sanity_validate_integer(const char *input) {
+bool fossil_sanity_validate_integer(const char *input) {
     if (!input || *input == '\0') return DISABLE;
     while (*input) {
         if (!isdigit(*input)) return DISABLE;
@@ -310,7 +310,7 @@ fossil_sanity_bool fossil_sanity_validate_integer(const char *input) {
 }
 
 // Validate if input string contains only allowed characters
-fossil_sanity_bool fossil_sanity_validate_string(const char *input, const char *allowed_chars) {
+bool fossil_sanity_validate_string(const char *input, const char *allowed_chars) {
     if (!input || !allowed_chars) return DISABLE;
     while (*input) {
         if (!strchr(allowed_chars, *input)) return DISABLE;
@@ -337,7 +337,7 @@ void fossil_sanity_load_config(const char *filename, fossil_sanity_config *confi
 }
 
 // Clarity check: more robust heuristic for checking confusing messages
-fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message) {
+bool fossil_sanity_check_message_clarity(const char *message) {
     // Example checks for common confusing words or phrases
     const char *confusing_keywords[] = {
         "error", "confusing", "complicated", "unintelligible", "undefined", 
@@ -380,7 +380,7 @@ fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message) {
 }
 
 // Simple grammar check: enhanced to check for sentence structure and avoid fragments
-fossil_sanity_bool fossil_sanity_check_grammar(const char *message) {
+bool fossil_sanity_check_grammar(const char *message) {
     if (!message || strlen(message) < 5) return DISABLE; // Too short to be a proper sentence
 
     // Check for sentence-ending punctuation (., !, ?)

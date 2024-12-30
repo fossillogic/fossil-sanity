@@ -17,13 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <time.h>
 
 // Boolean values
 #define ENABLE  1
 #define DISABLE 0
-
-typedef int fossil_sanity_bool;
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,11 +50,11 @@ typedef enum {
  * @brief Configuration structure for the Fossil Sanity library.
  */
 typedef struct {
-    fossil_sanity_bool debug_enabled;    /**< Enable/disable debug mode */
-    fossil_sanity_bool logs_enabled;     /**< Enable/disable logging */
+    bool debug_enabled;    /**< Enable/disable debug mode */
+    bool logs_enabled;     /**< Enable/disable logging */
     fossil_sanity_log_level log_level;   /**< Log level */
     FILE *log_output;                    /**< Output file for logs */
-    fossil_sanity_bool use_colors;       /**< Enable/disable colors in logs */
+    bool use_colors;       /**< Enable/disable colors in logs */
 } fossil_sanity_config;
 
 /**
@@ -106,7 +105,7 @@ const char *fossil_sanity_get_response(fossil_sanity_log_level level);
  * @param input Input string to validate.
  * @return Boolean indicating if the input is a valid integer.
  */
-fossil_sanity_bool fossil_sanity_validate_integer(const char *input);
+bool fossil_sanity_validate_integer(const char *input);
 
 /**
  * @brief Validate if the input string contains only allowed characters.
@@ -115,7 +114,7 @@ fossil_sanity_bool fossil_sanity_validate_integer(const char *input);
  * @param allowed_chars String of allowed characters.
  * @return Boolean indicating if the input is valid.
  */
-fossil_sanity_bool fossil_sanity_validate_string(const char *input, const char *allowed_chars);
+bool fossil_sanity_validate_string(const char *input, const char *allowed_chars);
 
 /**
  * @brief Get the color code for the specified log level.
@@ -131,7 +130,7 @@ const char *fossil_sanity_get_color_code(fossil_sanity_log_level level);
  * @param message Message to check.
  * @return Boolean indicating if the message is clear.
  */
-fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message);
+bool fossil_sanity_check_message_clarity(const char *message);
 
 /**
  * @brief Check the grammar of a message.
@@ -139,7 +138,7 @@ fossil_sanity_bool fossil_sanity_check_message_clarity(const char *message);
  * @param message Message to check.
  * @return Boolean indicating if the message has correct grammar.
  */
-fossil_sanity_bool fossil_sanity_check_grammar(const char *message);
+bool fossil_sanity_check_grammar(const char *message);
 
 #ifdef __cplusplus
 }
