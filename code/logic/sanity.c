@@ -228,6 +228,19 @@ char *custom_strdup(const char *str) {
     return new_str;
 }
 
+int custom_strcasecmp(const char *s1, const char *s2) {
+    while (*s1 && *s2) {
+        char c1 = (unsigned char)tolower((unsigned char)*s1);
+        char c2 = (unsigned char)tolower((unsigned char)*s2);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+        s1++;
+        s2++;
+    }
+    return (unsigned char)tolower((unsigned char)*s1) - (unsigned char)tolower((unsigned char)*s2);
+}
+
 // Get a random response based on the log level
 const char *fossil_sanity_get_response(fossil_sanity_log_level level) {
     srand((unsigned int)time(NULL));
@@ -400,22 +413,9 @@ void fossil_sanity_load_config(const char *filename, fossil_sanity_config *confi
     fclose(file);
 }
 
-int fossil_sanity_strcasecmp(const char *s1, const char *s2) {
-    while (*s1 && *s2) {
-        char c1 = tolower((unsigned char)*s1);
-        char c2 = tolower((unsigned char)*s2);
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-        s1++;
-        s2++;
-    }
-    return tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
-}
-
 bool is_in_array(const char *word, const char *array[], size_t array_size) {
     for (size_t i = 0; i < array_size; i++) {
-        if (fossil_sanity_strcasecmp(word, array[i]) == 0) {
+        if (custom_strcasecmp(word, array[i]) == 0) {
             return true;
         }
     }
@@ -424,7 +424,7 @@ bool is_in_array(const char *word, const char *array[], size_t array_size) {
 
 bool fossil_sanity_check_message_clarity(const char *message) {
     if (!message || strlen(message) == 0) {
-        return false; // Empty message
+        return false;
     }
 
     const char *delimiters = " .,!?";
@@ -439,7 +439,7 @@ bool fossil_sanity_check_message_clarity(const char *message) {
 
     while (token) {
         word_count++;
-        
+
         if (is_in_array(token, NOUNS, sizeof(NOUNS) / sizeof(NOUNS[0]))) {
             noun_count++;
         } else if (is_in_array(token, VERBS, sizeof(VERBS) / sizeof(VERBS[0]))) {
@@ -455,17 +455,16 @@ bool fossil_sanity_check_message_clarity(const char *message) {
 
     free(message_copy);
 
-    // Check message clarity criteria
     if (noun_count > 0 && verb_count > 0 && adj_count > 0 && rotbrain_count < 3 && word_count <= 20) {
-        return true; // Message is clear
+        return true;
     }
 
-    return false; // Message is unclear
+    return false;
 }
 
 bool fossil_sanity_check_grammar(const char *message) {
     if (!message || strlen(message) == 0) {
-        return false; // Empty message
+        return false;
     }
 
     const char *delimiters = " .,!?";
@@ -495,7 +494,7 @@ bool fossil_sanity_check_grammar(const char *message) {
             has_verb = true;
         }
 
-        if (is_in_array(token, ADJECTIVES, sizeof(ADJECTIVES) / sizeof(ADJECTIVES[0])) || 
+        if (is_in_array(token, ADJECTIVES, sizeof(ADJECTIVES) / sizeof(ADJECTIVES[0])) ||
             is_in_array(token, PREPOSITIONS, sizeof(PREPOSITIONS) / sizeof(PREPOSITIONS[0]))) {
             has_adj_or_prep = true;
         }
@@ -509,10 +508,9 @@ bool fossil_sanity_check_grammar(const char *message) {
 
     free(message_copy);
 
-    // Grammar validation criteria:
     if (started_with_article && has_noun && has_verb && has_adj_or_prep && !rotbrain_used) {
-        return true; // Message has valid grammar
+        return true;
     }
 
-    return false; // Invalid grammar
+    return false;
 }
