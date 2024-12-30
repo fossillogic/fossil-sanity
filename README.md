@@ -60,7 +60,7 @@ To integrate **Fossil Sanity** into your project:
 
 ## Fossil Sanity Command Palette
 
-The **Fossil Sanity** CLI provides a range of commands to control logging behavior, set log levels, and handle log rotation. It supports both short and long commands, with and without the `=` sign.
+The **Fossil Sanity** CLI provides a range of commands and options.
 
 ### Commands and Options
 
@@ -68,76 +68,81 @@ The **Fossil Sanity** CLI provides a range of commands to control logging behavi
 |----------------------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
 | `--version`                      | Displays the current version of Fossil Sanity.                                                    | Use to verify the version of the tool in use.                                          |
 | `--help`                         | Shows help message with all available commands.                                                  | Provides guidance for how to use the CLI and details on all options.                   |
-| `log`                            | Starts logging and writes messages at specified log levels.                                       | Enables logging for runtime diagnostics.                                               |
-| `rotate-logs`                    | Manages log file rotation, ensuring log files are handled properly when they reach a certain size. | Helps prevent log files from growing too large.                                        |
-| `set-log-level`                  | Configures the logging level (e.g., info, debug, error).                                          | Allows for dynamic control over the verbosity of logs.                                |
-| `clear-logs`                     | Clears all logs from the current session.                                                         | Useful for cleaning up logs before starting a new session.                             |
-| `view-logs`                      | Displays the current log contents.                                                                | Allows you to inspect logged messages in real-time.                                    |
-| `debug=enable`                   | Enables debug logging.                                                                            | Use `debug=disable` to disable.                                                        |
-| `logs=enable`                    | Enables logging output.                                                                           | Use `logs=disable` to disable.                                                         |
-| `colors=enable`                  | Enables color output in logs.                                                                     | Use `colors=disable` to disable.                                                       |
-| `show=prod`                      | Displays logs for production level messages only.                                                 | Other options: `warn`, `error`, `critical`, `debug`.                                   |
-| `show=warn`                      | Displays warning level messages and above.                                                        |                                                                                         |
-| `show=error`                     | Displays error level messages and above.                                                         |                                                                                         |
-| `show=critical`                  | Displays only critical error messages.                                                            |                                                                                         |
-| `show=debug`                     | Displays all logs, including debug level messages.                                                |                                                                                         |
+| `--debug`                        | Enables debug logging.                                                                            | Use `--no-debug` to disable.                                                           |
+| `--logs`                         | Enables logging output.                                                                           | Use `--no-logs` to disable.                                                            |
+| `--colors`                       | Enables color output in logs.                                                                     | Use `--no-colors` to disable.                                                          |
+| `--show-prod`                    | Displays logs for production level messages only.                                                 | Other options: `--show-warn`, `--show-error`, `--show-critical`, `--show-debug`.       |
+| `--show-warn`                    | Displays warning level messages and above.                                                        |                                                                                         |
+| `--show-error`                   | Displays error level messages and above.                                                          |                                                                                         |
+| `--show-critical`                | Displays only critical error messages.                                                            |                                                                                         |
+| `--show-debug`                   | Displays all logs, including debug level messages.                                                |                                                                                         |
 
 ### Example Commands:
 
 - To check the version of **Fossil Sanity**:
-  ```sh
-  fossil-sanity --version
-  ```
+    ```sh
+    fossil-sanity --version
+    ```
 
 - To view help information:
-  ```sh
-  fossil-sanity --help
-  ```
-
-- To start logging:
-  ```sh
-  fossil-sanity log
-  ```
-
-- To rotate logs when a file size exceeds a threshold:
-  ```sh
-  fossil-sanity rotate-logs
-  ```
-
-- To set the log level to 'debug':
-  ```sh
-  fossil-sanity set-log-level debug
-  ```
-
-- To clear all logs from the current session:
-  ```sh
-  fossil-sanity clear-logs
-  ```
-
-- To view the current logs:
-  ```sh
-  fossil-sanity view-logs
-  ```
+    ```sh
+    fossil-sanity --help
+    ```
 
 - To enable debug logging:
-  ```sh
-  fossil-sanity debug=enable
-  ```
+    ```sh
+    fossil-sanity --debug
+    ```
 
-- To disable logs:
-  ```sh
-  fossil-sanity logs=disable
-  ```
+- To disable debug logging:
+    ```sh
+    fossil-sanity --no-debug
+    ```
+
+- To enable logging output:
+    ```sh
+    fossil-sanity --logs
+    ```
+
+- To disable logging output:
+    ```sh
+    fossil-sanity --no-logs
+    ```
+
+- To enable color output in logs:
+    ```sh
+    fossil-sanity --colors
+    ```
 
 - To disable color output in logs:
-  ```sh
-  fossil-sanity colors=disable
-  ```
+    ```sh
+    fossil-sanity --no-colors
+    ```
 
 - To show production logs only:
-  ```sh
-  fossil-sanity show=prod
-  ```
+    ```sh
+    fossil-sanity --show-prod
+    ```
+
+- To show warning level messages and above:
+    ```sh
+    fossil-sanity --show-warn
+    ```
+
+- To show error level messages and above:
+    ```sh
+    fossil-sanity --show-error
+    ```
+
+- To show only critical error messages:
+    ```sh
+    fossil-sanity --show-critical
+    ```
+
+- To show all logs, including debug level messages:
+    ```sh
+    fossil-sanity --show-debug
+    ```
 
 ---
 
