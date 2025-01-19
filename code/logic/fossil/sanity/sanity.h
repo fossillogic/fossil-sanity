@@ -11,8 +11,8 @@
  * Copyright (C) 2024 Fossil Logic. All rights reserved.
  * -----------------------------------------------------------------------------
  */
-#ifndef FOSSIL_SANITY_CORE_H
-#define FOSSIL_SANITY_CORE_H
+#ifndef FOSSIL_SANITY_IO_H
+#define FOSSIL_SANITY_IO_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -204,4 +204,4 @@ fossil_sanity_out_error_t fossil_sanity_out_log_with_rotation(const char *file_p
 }
 #endif
 
-#endif // FOSSIL_SANITY_CORE_H
+#endif // FOSSIL_SANITY_IO_H
