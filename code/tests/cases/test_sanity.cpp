@@ -14,7 +14,6 @@
  */
 #include <fossil/test/framework.h>
 #include <fossil/sanity/framework.h>
-#include <string>
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
 // * Fossil Logic Test Utilites
@@ -44,76 +43,89 @@ FOSSIL_TEARDOWN(cpp_sanity_suite) {
 // as samples for library usage.
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
-FOSSIL_TEST_CASE(cpp_get_response) {
-    fossil_sanity_log_level levels[] = {
-        FOSSIL_SANITY_LOG_PROD,
-        FOSSIL_SANITY_LOG_WARN,
-        FOSSIL_SANITY_LOG_ERROR,
-        FOSSIL_SANITY_LOG_CRITICAL,
-        FOSSIL_SANITY_LOG_DEBUG
-    };
+FOSSIL_TEST_CASE(cpp_validate_int) {
+    int output;
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_int("123", &output) == true, "Valid integer input");
+    FOSSIL_TEST_ASSUME(output == 123, "Output should be 123");
 
-    for (size_t i = 0; i < sizeof(levels) / sizeof(levels[0]); i++) {
-        const char *response = fossil_sanity_get_response(levels[i]);
-        FOSSIL_TEST_ASSUME(response != NULL, "Response should not be NULL");
-    }
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_int("-123", &output) == true, "Valid negative integer input");
+    FOSSIL_TEST_ASSUME(output == -123, "Output should be -123");
+
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_int("abc", &output) == false, "Invalid integer input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_int(NULL, &output) == false, "Null input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_int("123", NULL) == false, "Null output pointer");
 } // end case
 
-FOSSIL_TEST_CASE(cpp_init_config) {
-    fossil_sanity_config config;
-    fossil_sanity_init_config(&config);
+FOSSIL_TEST_CASE(cpp_validate_float) {
+    float output;
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_float("123.45", &output) == true, "Valid float input");
+    FOSSIL_TEST_ASSUME(output == 123.45f, "Output should be 123.45");
 
-    FOSSIL_TEST_ASSUME(config.debug_enabled == false, "Debug should be disabled by default");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled by default");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_WARN, "Default log level should be WARN");
-    FOSSIL_TEST_ASSUME(config.log_output == NULL, "Log output should be NULL by default");
-    FOSSIL_TEST_ASSUME(config.use_colors == true, "Colors should be enabled by default");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_float("-123.45", &output) == true, "Valid negative float input");
+    FOSSIL_TEST_ASSUME(output == -123.45f, "Output should be -123.45");
+
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_float("abc", &output) == false, "Invalid float input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_float(NULL, &output) == false, "Null input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_float("123.45", NULL) == false, "Null output pointer");
 } // end case
 
-FOSSIL_TEST_CASE(cpp_parse_args) {
-    fossil_sanity_config config;
-    fossil_sanity_init_config(&config);
+FOSSIL_TEST_CASE(cpp_validate_alnum) {
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_alnum("abc123") == true, "Valid alphanumeric input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_alnum("abc 123") == false, "Invalid alphanumeric input with space");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_alnum("abc@123") == false, "Invalid alphanumeric input with special character");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_alnum(NULL) == false, "Null input");
+} // end case
 
-    const char *args1[] = {"sanity", "--debug", "--no-logs", "--no-colors", "--show-error"};
-    fossil_sanity_parse_args(5, const_cast<char **>(args1), &config);
-    FOSSIL_TEST_ASSUME(config.debug_enabled == true, "Debug should be enabled");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == false, "Logs should be disabled");
-    FOSSIL_TEST_ASSUME(config.use_colors == false, "Colors should be disabled");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_ERROR, "Log level should be ERROR");
+FOSSIL_TEST_CASE(cpp_validate_email) {
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_email("test@example.com") == true, "Valid email input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_email("test.example.com") == false, "Invalid email input without @");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_email("test@com") == false, "Invalid email input without domain");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_email(NULL) == false, "Null input");
+} // end case
 
-    const char *args2[] = {"sanity", "--no-debug", "--logs", "--no-colors"};
-    fossil_sanity_parse_args(4, const_cast<char **>(args2), &config);
-    FOSSIL_TEST_ASSUME(config.debug_enabled == false, "Debug should be disabled");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled");
-    FOSSIL_TEST_ASSUME(config.use_colors == false, "Colors should be disabled");
+FOSSIL_TEST_CASE(cpp_validate_length) {
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_length("test", 5) == true, "Valid length input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_length("test", 4) == true, "Valid length input equal to max length");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_length("test", 3) == false, "Invalid length input exceeding max length");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_is_valid_length(NULL, 5) == false, "Null input");
+} // end case
 
-    const char *args3[] = {"sanity", "--no-debug", "--logs", "--colors", "--show-warn"};
-    fossil_sanity_parse_args(5, const_cast<char **>(args3), &config);
-    FOSSIL_TEST_ASSUME(config.debug_enabled == false, "Debug should be disabled");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled");
-    FOSSIL_TEST_ASSUME(config.use_colors == true, "Colors should be enabled");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_WARN, "Log level should be WARN");
+FOSSIL_TEST_CASE(cpp_sanitize_string) {
+    char output[10];
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test", output, sizeof(output)) == FOSSIL_SANITY_IN_SUCCESS, "Valid sanitize input");
+    FOSSIL_TEST_ASSUME(strcmp(output, "test") == 0, "Output should be 'test'");
 
-    const char *args4[] = {"sanity", "--debug", "--logs", "--colors", "--show-critical"};
-    fossil_sanity_parse_args(5, const_cast<char **>(args4), &config);
-    FOSSIL_TEST_ASSUME(config.debug_enabled == true, "Debug should be enabled");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled");
-    FOSSIL_TEST_ASSUME(config.use_colors == true, "Colors should be enabled");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_CRITICAL, "Log level should be CRITICAL");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test\n", output, sizeof(output)) == FOSSIL_SANITY_IN_SUCCESS, "Valid sanitize input with non-printable character");
+    FOSSIL_TEST_ASSUME(strcmp(output, "test") == 0, "Output should be 'test'");
 
-    const char *args5[] = {"sanity", "--debug", "--logs", "--colors", "--show-debug"};
-    fossil_sanity_parse_args(5, const_cast<char **>(args5), &config);
-    FOSSIL_TEST_ASSUME(config.debug_enabled == true, "Debug should be enabled");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled");
-    FOSSIL_TEST_ASSUME(config.use_colors == true, "Colors should be enabled");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_DEBUG, "Log level should be DEBUG");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test", output, 3) == FOSSIL_SANITY_ERR_INVALID_LENGTH, "Invalid sanitize input exceeding output size");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string(NULL, output, sizeof(output)) == FOSSIL_SANITY_ERR_NULL_INPUT, "Null input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test", NULL, sizeof(output)) == FOSSIL_SANITY_ERR_NULL_INPUT, "Null output pointer");
+} // end case
 
-    const char *args6[] = {"sanity", "--debug", "--logs", "--colors", "--show-prod"};
-    fossil_sanity_parse_args(5, const_cast<char **>(args6), &config);
-    FOSSIL_TEST_ASSUME(config.debug_enabled == true, "Debug should be enabled");
-    FOSSIL_TEST_ASSUME(config.logs_enabled == true, "Logs should be enabled");
-    FOSSIL_TEST_ASSUME(config.use_colors == true, "Colors should be enabled");
-    FOSSIL_TEST_ASSUME(config.log_level == FOSSIL_SANITY_LOG_PROD, "Log level should be PROD");
+FOSSIL_TEST_CASE(cpp_read_secure_line) {
+    char buffer[10];
+    FILE *input = fmemopen("test\n", 5, "r");
+    stdin = input;
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_read_secure_line(buffer, sizeof(buffer)) == FOSSIL_SANITY_IN_SUCCESS, "Valid read secure line input");
+    FOSSIL_TEST_ASSUME(strcmp(buffer, "test") == 0, "Output should be 'test'");
+    fclose(input);
+
+    input = fmemopen("testtesttest\n", 13, "r");
+    stdin = input;
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_read_secure_line(buffer, sizeof(buffer)) == FOSSIL_SANITY_ERR_MEMORY_OVERFLOW, "Invalid read secure line input exceeding buffer size");
+    fclose(input);
+
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_read_secure_line(NULL, sizeof(buffer)) == FOSSIL_SANITY_ERR_NULL_INPUT, "Null buffer");
+} // end case
+
+FOSSIL_TEST_CASE(cpp_error_message) {
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_IN_SUCCESS), "Success") == 0, "Error message for success");
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_NULL_INPUT), "Null input provided") == 0, "Error message for null input");
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_INVALID_LENGTH), "Invalid input length") == 0, "Error message for invalid length");
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_INVALID_FORMAT), "Invalid input format") == 0, "Error message for invalid format");
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_MEMORY_OVERFLOW), "Memory overflow detected") == 0, "Error message for memory overflow");
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(-1), "Unknown error") == 0, "Error message for unknown error");
 } // end case
 
 // In need of test cases for log messages, seem to be held back due to Fossil Test laking a way to mock IO.
@@ -125,6 +137,14 @@ FOSSIL_TEST_GROUP(cpp_sanity_test_cases) {
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_get_response);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_init_config);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_parse_args);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_int);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_float);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_alnum);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_email);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_length);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_sanitize_string);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_read_secure_line);
+    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_error_message);
 
     FOSSIL_TEST_REGISTER(cpp_sanity_suite);
 } // end of group
