@@ -1,46 +1,45 @@
 # **Fossil Sanity by Fossil Logic**
 
-**Fossil Sanity** is a powerful logging library designed to help developers maintain clarity and control over their project's runtime behavior. It enables comprehensive logging, allowing developers to track the internal workings of their system, monitor runtime anomalies, and ensure software stability across different environments.
+**Fossil Sanity** is a powerful validation library designed to help developers maintain clarity and control over user input in their projects. With its robust validation tools, developers can track the correctness of inputs, monitor anomalies, and ensure software stability across diverse environments.
 
-Fossil Sanity provides seamless integration with your C or C++ projects, offering tools for logging different types of messages (info, debug, error, etc.), custom log formats, and cross-platform support. It is built for developers who need a robust logging mechanism to track and troubleshoot issues during development, testing, and production stages.
+This library provides seamless integration with C and C++ projects, offering capabilities to validate various types of inputs (e.g., strings, numbers), define custom validation rules, and work efficiently across platforms. It is specifically built for developers who require a reliable validation mechanism for debugging, testing, and ensuring smooth production operations. Additionally, it features notification and logging tools to keep developers informed about validation status and potential issues.
 
 ---
 
-**Key Features:**
+## **Key Features**
 
 | Feature                        | Description                                                                                             |
 |--------------------------------|---------------------------------------------------------------------------------------------------------|
-| **Comprehensive Logging**      | Support for various log levels (info, debug, warning, error), ensuring flexible message tracking.       |
-| **Custom Log Formats**         | Define custom log formats to suit project needs, whether for concise messages or detailed outputs.      |
-| **Cross-Platform Support**     | Works across multiple platforms, ensuring consistent logging behavior in different environments.         |
-| **Performance-Friendly**       | Optimized to minimize performance impact, even during intensive logging operations.                      |
-| **Configurable Log Levels**    | Set custom thresholds for different log levels, providing fine-grained control over logging behavior.    |
-| **Log File Management**        | Includes options for managing log files, with automatic rotation and archival features.                 |
-| **Command-Line Control**       | Control logging behavior, log levels, and more via simple CLI commands.                                 |
+| **Comprehensive Validation**   | Supports validation for various input types (e.g., strings, numbers) to ensure flexibility and reliability. |
+| **Custom Validation Rules**    | Allows developers to define tailored validation rules for simple checks or complex requirements.        |
+| **Cross-Platform Support**     | Ensures consistent validation behavior across multiple platforms and environments.                      |
+| **Performance-Friendly**       | Optimized to minimize performance overhead, even for intensive validation tasks.                        |
+| **Configurable Validation Levels** | Enables fine-grained control over validation thresholds to align with project-specific needs.         |
+| **Notification Management**    | Provides built-in tools for automatic alerts and logging to keep you informed of validation outcomes.    |
 
 ---
 
-## ***Prerequisites***
+## **Prerequisites**
 
-To get started with **Fossil Sanity**, ensure you have the following:
+Before integrating **Fossil Sanity** into your project, ensure the following:
 
-- **Meson Build System**: Fossil Sanity uses the Meson build system for configuration. If you don’t have Meson installed, follow the installation instructions on the official [Meson website](https://mesonbuild.com/Getting-meson.html).
+- **Meson Build System**: Fossil Sanity leverages Meson for configuration. Follow the installation instructions on the official [Meson website](https://mesonbuild.com/Getting-meson.html) if you don’t already have it installed.
 
 ---
 
-### Adding Fossil Sanity to Your Project
+### **Adding Fossil Sanity to Your Project**
 
-To integrate **Fossil Sanity** into your project:
+1. **Install Meson**  
+   Install or upgrade Meson (version `1.3` or newer):
 
-1. **Install Meson**:
-   Install or upgrade Meson version `1.3` or newer:
    ```sh
-   python -m pip install meson           # To install Meson
-   python -m pip install --upgrade meson # To upgrade Meson
+   python -m pip install meson           # Install Meson
+   python -m pip install --upgrade meson # Upgrade Meson
    ```
 
-2. **Create a `.wrap` File**:
-   Add the `fossil-sanity.wrap` file in your `subprojects` directory:
+2. **Add a `.wrap` File**  
+   Create a `fossil-sanity.wrap` file in your `subprojects` directory:
+
    ```ini
    [wrap-git]
    url = https://github.com/fossillogic/fossil-sanity.git
@@ -50,120 +49,99 @@ To integrate **Fossil Sanity** into your project:
    fossil-sanity = fossil_sanity_dep
    ```
 
-3. **Integrate the Dependency**:
-   In your `meson.build` file, integrate Fossil Sanity by adding:
-   ```ini
+3. **Integrate the Dependency**  
+   Add the following to your `meson.build` file to include Fossil Sanity:
+
+   ```meson
    dep = dependency('fossil-sanity')
    ```
 
 ---
 
-## Fossil Sanity Command Palette
+### Sample Usage
 
-The **Fossil Sanity** CLI provides a range of commands and options.
+#### Code Snippet (C)
 
-### Commands and Options
+```c
+#include <stdio.h>
+#include <string.h>
+#include <fossil/sanity/framework.h>  // Include the fossil_sanity header
 
-| Command                         | Description                                                                                     | Notes                                                                                  |
-|----------------------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| `--version`                      | Displays the current version of Fossil Sanity.                                                    | Use to verify the version of the tool in use.                                          |
-| `--help`                         | Shows help message with all available commands.                                                  | Provides guidance for how to use the CLI and details on all options.                   |
-| `--debug`                        | Enables debug logging.                                                                            | Use `--no-debug` to disable.                                                           |
-| `--logs`                         | Enables logging output.                                                                           | Use `--no-logs` to disable.                                                            |
-| `--colors`                       | Enables color output in logs.                                                                     | Use `--no-colors` to disable.                                                          |
-| `--show-prod`                    | Displays logs for production level messages only.                                                 | Other options: `--show-warn`, `--show-error`, `--show-critical`, `--show-debug`.       |
-| `--show-warn`                    | Displays warning level messages and above.                                                        |                                                                                         |
-| `--show-error`                   | Displays error level messages and above.                                                          |                                                                                         |
-| `--show-critical`                | Displays only critical error messages.                                                            |                                                                                         |
-| `--show-debug`                   | Displays all logs, including debug level messages.                                                |                                                                                         |
 
-### Example Commands:
+int main(void) {
+    char username[100];
+    char password[100];
+    
+    // Step 1: Get username input with validation
+    fossil_sanity_in_error_t input_result = fossil_sanity_in_get_username(username, sizeof(username));
+    if (input_result != FOSSIL_SANITY_IN_SUCCESS) {
+        fossil_sanity_out_log("error.log", FOSSIL_SANITY_OUT_ERROR, "Failed to read username.");
+        return 1;
+    }
 
-- To check the version of **Fossil Sanity**:
-    ```sh
-    fossil-sanity --version
-    ```
+    // Step 2: Get password input securely
+    input_result = fossil_sanity_in_get_password(password, sizeof(password));
+    if (input_result != FOSSIL_SANITY_IN_SUCCESS) {
+        fossil_sanity_out_log("error.log", FOSSIL_SANITY_OUT_ERROR, "Failed to read password.");
+        return 1;
+    }
 
-- To view help information:
-    ```sh
-    fossil-sanity --help
-    ```
+    // Step 3: Log successful input
+    fossil_sanity_out_log("app.log", FOSSIL_SANITY_OUT_INFO, "User input successfully captured.");
+    
+    // Step 4: Perform some action, like authentication or processing
 
-- To enable debug logging:
-    ```sh
-    fossil-sanity --debug
-    ```
-
-- To disable debug logging:
-    ```sh
-    fossil-sanity --no-debug
-    ```
-
-- To enable logging output:
-    ```sh
-    fossil-sanity --logs
-    ```
-
-- To disable logging output:
-    ```sh
-    fossil-sanity --no-logs
-    ```
-
-- To enable color output in logs:
-    ```sh
-    fossil-sanity --colors
-    ```
-
-- To disable color output in logs:
-    ```sh
-    fossil-sanity --no-colors
-    ```
-
-- To show production logs only:
-    ```sh
-    fossil-sanity --show-prod
-    ```
-
-- To show warning level messages and above:
-    ```sh
-    fossil-sanity --show-warn
-    ```
-
-- To show error level messages and above:
-    ```sh
-    fossil-sanity --show-error
-    ```
-
-- To show only critical error messages:
-    ```sh
-    fossil-sanity --show-critical
-    ```
-
-- To show all logs, including debug level messages:
-    ```sh
-    fossil-sanity --show-debug
-    ```
-
----
-
-## Configure Logging Levels
-
-To customize the logging levels or other logging options, you can use the following:
-
-```sh
-meson setup builddir -Dlogging_level=debug
+    return 0;
+}
 ```
 
-This command allows you to fine-tune your logging configuration, adjusting the verbosity and log handling to suit your project's needs.
+#### Example Log Output (app.log)
+
+```ini
+[INFO] User input successfully captured.
+```
+
+#### Example Log Output (error.log)
+
+```ini
+[ERROR] Failed to read username.
+[ERROR] Failed to read password.
+```
 
 ---
 
-## ***Contributing and Support***
+### Explanation
 
-For contributions, questions, or support, visit the [Fossil Sanity GitHub repository](https://github.com/fossillogic/fossil-sanity) or check out the [Fossil Logic Docs](https://fossillogic.com/docs).
+1. **Input Handling**:
+    - `fossil_sanity_in_get_username` and `fossil_sanity_in_get_password` are used to capture user input, with built-in validation for correctness and security.
+    - If any input function fails, an error is logged using `fossil_sanity_out_log` to track the issue.
+
+2. **Output Handling**:
+    - The program logs a successful input capture in the `app.log` file and any errors (e.g., failure to read username or password) in the `error.log` file.
+
+3. **Logging Severity**:
+    - Logs are written with different severity levels (e.g., INFO, ERROR) to help categorize messages. Logs are written to different files for better organization.
 
 ---
 
-## ***Conclusion***
+This example shows how to integrate input validation and logging with `fossil_sanity` in a typical C application. The functions `fossil_sanity_in_get_*` handle user input securely, while `fossil_sanity_out_log` ensures proper output and error tracking.
 
-**Fossil Sanity** is an essential tool for tracking and logging runtime information, ensuring you can debug and monitor your C and C++ projects effectively. Whether you're fine-tuning performance, identifying bugs, or maintaining logs in production, Fossil Sanity provides a comprehensive solution. Integrated with other Fossil Logic tools, it forms a complete toolkit for developers who need robust, cross-platform logging capabilities.
+## **Configure Build Options**
+
+To configure the build system with testing enabled, use the following command:
+
+```sh
+meson setup builddir -Dwith_test=enabled
+```
+
+---
+
+## **Contributing and Support**
+
+We welcome contributions! If you have questions, encounter issues, or wish to contribute, visit the [Fossil Sanity GitHub repository](https://github.com/fossillogic/fossil-sanity) or explore our detailed documentation at the [Fossil Logic Docs](https://fossillogic.com/docs).
+
+---
+
+## **Conclusion**
+
+**Fossil Sanity** is an essential library for maintaining input validation and runtime monitoring in your C and C++ projects. Whether you are debugging, optimizing performance, or maintaining stability in production, Fossil Sanity equips you with the tools you need to stay in control. Paired with other Fossil Logic tools, it provides a complete solution for developers seeking reliable and cross-platform validation capabilities.
