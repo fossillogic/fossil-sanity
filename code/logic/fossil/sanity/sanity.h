@@ -14,126 +14,191 @@
 #ifndef FOSSIL_SANITY_CORE_H
 #define FOSSIL_SANITY_CORE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stddef.h>
 #include <stdbool.h>
-#include <time.h>
+
+// Maximum limits
+#define FOSSIL_SANITY_MAX_STR_LEN 1024
+#define FOSSIL_SANITY_MAX_INT 2147483647
+#define FOSSIL_SANITY_MIN_INT -2147483648
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum {
-    FOSSIL_SANITY_TRUE = true,
-    FOSSIL_SANITY_FALSE = false
-};
-
-/**
- * @enum fossil_sanity_log_level
- * @brief Enumeration of log levels.
- */
+// Severity levels for logs and notifications
 typedef enum {
-    FOSSIL_SANITY_LOG_PROD,      /**< Production log level */
-    FOSSIL_SANITY_LOG_WARN,      /**< Warning log level */
-    FOSSIL_SANITY_LOG_ERROR,     /**< Error log level */
-    FOSSIL_SANITY_LOG_CRITICAL,  /**< Critical log level */
-    FOSSIL_SANITY_LOG_DEBUG      /**< Debug log level */
-} fossil_sanity_log_level;
+    FOSSIL_SANITY_OUT_INFO,
+    FOSSIL_SANITY_OUT_WARNING,
+    FOSSIL_SANITY_OUT_ERROR,
+    FOSSIL_SANITY_OUT_DEBUG
+} fossil_sanity_out_severity_t;
+
+// Error codes
+typedef enum {
+    FOSSIL_SANITY_OUT_SUCCESS = 0,
+    FOSSIL_SANITY_OUT_ERR_NULL_INPUT,
+    FOSSIL_SANITY_OUT_ERR_INVALID_FORMAT,
+    FOSSIL_SANITY_OUT_ERR_BUFFER_OVERFLOW
+} fossil_sanity_out_error_t;
+
+// Error codes
+typedef enum {
+    FOSSIL_SANITY_IN_SUCCESS = 0,
+    FOSSIL_SANITY_ERR_NULL_INPUT,
+    FOSSIL_SANITY_ERR_INVALID_LENGTH,
+    FOSSIL_SANITY_ERR_INVALID_FORMAT,
+    FOSSIL_SANITY_ERR_MEMORY_OVERFLOW
+} fossil_sanity_in_error_t;
 
 /**
- * @struct fossil_sanity_config
- * @brief Configuration structure for the Fossil Sanity library.
- */
-typedef struct {
-    bool debug_enabled;    /**< Enable/disable debug mode */
-    bool logs_enabled;     /**< Enable/disable logging */
-    fossil_sanity_log_level log_level;   /**< Log level */
-    FILE *log_output;                    /**< Output file for logs */
-    bool use_colors;       /**< Enable/disable colors in logs */
-} fossil_sanity_config;
-
-/**
- * @brief Initialize the configuration structure with default values.
- *
- * @param config Pointer to the configuration structure to initialize.
- */
-void fossil_sanity_init_config(fossil_sanity_config *config);
-
-/**
- * @brief Parse command-line arguments to configure the library.
- *
- * @param argc Argument count.
- * @param argv Argument vector.
- * @param config Pointer to the configuration structure to populate.
- */
-void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *config);
-
-/**
- * @brief Summary of the configuration settings.
+ * @brief Validates if the input string is a valid integer.
  * 
- * @param config Pointer to the configuration structure.
+ * @param input The input string to validate.
+ * @param output Pointer to an integer where the parsed value will be stored if valid.
+ * @return true if the input is a valid integer, false otherwise.
  */
-void fossil_sanity_summary(const fossil_sanity_config *config);
+bool fossil_sanity_in_is_valid_int(const char *input, int *output);
 
 /**
- * @brief Log a message with the specified log level.
- *
- * @param config Pointer to the configuration structure.
- * @param level Log level of the message.
- * @param message Format string for the log message.
+ * @brief Validates if the input string is a valid float.
+ * 
+ * @param input The input string to validate.
+ * @param output Pointer to a float where the parsed value will be stored if valid.
+ * @return true if the input is a valid float, false otherwise.
+ */
+bool fossil_sanity_in_is_valid_float(const char *input, float *output);
+
+/**
+ * @brief Validates if the input string contains only alphanumeric characters.
+ * 
+ * @param input The input string to validate.
+ * @return true if the input is alphanumeric, false otherwise.
+ */
+bool fossil_sanity_in_is_valid_alnum(const char *input);
+
+/**
+ * @brief Validates if the input string is a valid email address.
+ * 
+ * @param input The input string to validate.
+ * @return true if the input is a valid email address, false otherwise.
+ */
+bool fossil_sanity_in_is_valid_email(const char *input);
+
+/**
+ * @brief Validates if the input string does not exceed the specified maximum length.
+ * 
+ * @param input The input string to validate.
+ * @param max_length The maximum allowed length of the input string.
+ * @return true if the input length is within the specified limit, false otherwise.
+ */
+bool fossil_sanity_in_is_valid_length(const char *input, size_t max_length);
+
+/**
+ * @brief Sanitizes the input string and stores the sanitized result in the output buffer.
+ * 
+ * @param input The input string to sanitize.
+ * @param output The buffer where the sanitized string will be stored.
+ * @param output_size The size of the output buffer.
+ * @return A fossil_sanity_in_error_t indicating the result of the sanitization process.
+ */
+fossil_sanity_in_error_t fossil_sanity_in_sanitize_string(const char *input, char *output, size_t output_size);
+
+/**
+ * @brief Reads a secure line of input into the provided buffer.
+ * 
+ * @param buffer The buffer where the input will be stored.
+ * @param buffer_size The size of the buffer.
+ * @return A fossil_sanity_in_error_t indicating the result of the input reading process.
+ */
+fossil_sanity_in_error_t fossil_sanity_in_read_secure_line(char *buffer, size_t buffer_size);
+
+/**
+ * @brief Returns a human-readable error message corresponding to the given error code.
+ * 
+ * @param error The error code for which to retrieve the message.
+ * @return A string containing the error message.
+ */
+const char *fossil_sanity_in_error_message(fossil_sanity_in_error_t error);
+
+// ============================================================================
+// Output functions
+// ============================================================================
+
+/**
+ * @brief Sanitizes the input string and stores the result in the output buffer.
+ * 
+ * @param input The input string to be sanitized.
+ * @param output The buffer to store the sanitized output string.
+ * @param output_size The size of the output buffer.
+ * @return fossil_sanity_out_error_t Error code indicating the result of the sanitization.
+ */
+fossil_sanity_out_error_t fossil_sanity_out_sanitize_string(const char *input, char *output, size_t output_size);
+
+/**
+ * @brief Logs a message with the specified severity.
+ * 
+ * @param severity The severity level of the log message.
+ * @param message The format string for the log message.
  * @param ... Additional arguments for the format string.
  */
-void fossil_sanity_log(const fossil_sanity_config *config, fossil_sanity_log_level level, const char *message, ...);
+void fossil_sanity_out_log(fossil_sanity_out_severity_t severity, const char *message, ...);
 
 /**
- * @brief Get a response message based on the log level.
- *
- * @param level Log level.
- * @return Response message.
+ * @brief Logs a message with the specified severity to a file.
+ * 
+ * @param file_path The path to the log file.
+ * @param severity The severity level of the log message.
+ * @param message The format string for the log message.
+ * @param ... Additional arguments for the format string.
  */
-const char *fossil_sanity_get_response(fossil_sanity_log_level level);
+void fossil_sanity_out_log_to_file(const char *file_path, fossil_sanity_out_severity_t severity, const char *message, ...);
 
 /**
- * @brief Validate if the input string is a valid integer.
- *
- * @param input Input string to validate.
- * @return Boolean indicating if the input is a valid integer.
+ * @brief Sends a notification with the specified title and message.
+ * 
+ * @param title The title of the notification.
+ * @param message The message of the notification.
  */
-bool fossil_sanity_validate_integer(const char *input);
+void fossil_sanity_out_notify(const char *title, const char *message);
 
 /**
- * @brief Validate if the input string contains only allowed characters.
- *
- * @param input Input string to validate.
- * @param allowed_chars String of allowed characters.
- * @return Boolean indicating if the input is valid.
+ * @brief Sends a notification with the specified severity, title, and message.
+ * 
+ * @param severity The severity level of the notification.
+ * @param title The title of the notification.
+ * @param message The message of the notification.
  */
-bool fossil_sanity_validate_string(const char *input, const char *allowed_chars);
+void fossil_sanity_out_notify_with_severity(fossil_sanity_out_severity_t severity, const char *title, const char *message);
 
 /**
- * @brief Get the color code for the specified log level.
- *
- * @param level Log level.
- * @return Color code string.
+ * @brief Securely prints a formatted string.
+ * 
+ * @param format The format string.
+ * @param ... Additional arguments for the format string.
+ * @return fossil_sanity_out_error_t Error code indicating the result of the secure printing.
  */
-const char *fossil_sanity_get_color_code(fossil_sanity_log_level level);
+fossil_sanity_out_error_t fossil_sanity_out_print_secure(const char *format, ...);
 
 /**
- * @brief Check the clarity of a message.
- *
- * @param message Message to check.
- * @return Boolean indicating if the message is clear.
+ * @brief Retrieves the error message corresponding to the given error code.
+ * 
+ * @param error The error code.
+ * @return const char* The error message.
  */
-bool fossil_sanity_check_message_clarity(const char *message);
+const char *fossil_sanity_out_error_message(fossil_sanity_out_error_t error);
 
 /**
- * @brief Check the grammar of a message.
- *
- * @param message Message to check.
- * @return Boolean indicating if the message has correct grammar.
+ * @brief Logs a message with rotation support.
+ * 
+ * @param file_path The path to the log file.
+ * @param max_size The maximum size of the log file before rotation.
+ * @param severity The severity level of the log message.
+ * @param message The format string for the log message.
+ * @param ... Additional arguments for the format string.
+ * @return fossil_sanity_out_error_t Error code indicating the result of the logging operation.
  */
-bool fossil_sanity_check_grammar(const char *message);
+fossil_sanity_out_error_t fossil_sanity_out_log_with_rotation(const char *file_path, size_t max_size, fossil_sanity_out_severity_t severity, const char *message, ...);
 
 #ifdef __cplusplus
 }
