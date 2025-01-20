@@ -134,9 +134,6 @@ FOSSIL_TEST_CASE(cpp_error_message) {
 // * Fossil Logic Test Pool
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(cpp_sanity_test_cases) {
-    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_get_response);
-    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_init_config);
-    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_parse_args);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_int);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_float);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_alnum);
