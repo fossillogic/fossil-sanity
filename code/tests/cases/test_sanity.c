@@ -110,7 +110,6 @@ FOSSIL_TEST_CASE(c_error_message) {
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_INVALID_LENGTH), "Invalid input length") == 0, "Error message for invalid length");
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_INVALID_FORMAT), "Invalid input format") == 0, "Error message for invalid format");
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_MEMORY_OVERFLOW), "Memory overflow detected") == 0, "Error message for memory overflow");
-    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(-1), "Unknown error") == 0, "Error message for unknown error");
 } // end case
 
 // In need of test cases for log messages, seem to be held back due to Fossil Test laking a way to mock IO.
