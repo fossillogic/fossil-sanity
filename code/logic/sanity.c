@@ -31,7 +31,7 @@ bool fossil_sanity_in_is_valid_int(const char *input, int *output) {
     if (!input || !output) return false;
     char *endptr;
     long value = strtol(input, &endptr, 10);
-    if (*endptr != '\0' || value < FOSSIL_SANITY_MIN_INT || value > FOSSIL_SANITY_MAX_INT) {
+    if (*endptr != '\0' || value > FOSSIL_SANITY_MAX_INT) {
         return false;
     }
     *output = (int)value;
