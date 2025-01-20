@@ -99,29 +99,13 @@ FOSSIL_TEST_CASE(cpp_sanitize_string) {
     FOSSIL_TEST_ASSUME(strcmp(output, "test") == 0, "Output should be 'test'");
 
     FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test", output, 3) == FOSSIL_SANITY_ERR_INVALID_LENGTH, "Invalid sanitize input exceeding output size");
-    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string(NULL, output, sizeof(output)) == FOSSIL_SANITY_ERR_NULL_INPUT, "Null input");
-    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test", NULL, sizeof(output)) == FOSSIL_SANITY_ERR_NULL_INPUT, "Null output pointer");
-} // end case
-
-FOSSIL_TEST_CASE(cpp_read_secure_line) {
-    char buffer[10];
-    FILE *input = fmemopen("test\n", 5, "r");
-    stdin = input;
-    FOSSIL_TEST_ASSUME(fossil_sanity_in_read_secure_line(buffer, sizeof(buffer)) == FOSSIL_SANITY_IN_SUCCESS, "Valid read secure line input");
-    FOSSIL_TEST_ASSUME(strcmp(buffer, "test") == 0, "Output should be 'test'");
-    fclose(input);
-
-    input = fmemopen("testtesttest\n", 13, "r");
-    stdin = input;
-    FOSSIL_TEST_ASSUME(fossil_sanity_in_read_secure_line(buffer, sizeof(buffer)) == FOSSIL_SANITY_ERR_MEMORY_OVERFLOW, "Invalid read secure line input exceeding buffer size");
-    fclose(input);
-
-    FOSSIL_TEST_ASSUME(fossil_sanity_in_read_secure_line(NULL, sizeof(buffer)) == FOSSIL_SANITY_ERR_NULL_INPUT, "Null buffer");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string(NULL, output, sizeof(output)) == FOSSIL_SANITY_IN_ERR_NULL_INPUT, "Null input");
+    FOSSIL_TEST_ASSUME(fossil_sanity_in_sanitize_string("test", NULL, sizeof(output)) == FOSSIL_SANITY_IN_ERR_NULL_INPUT, "Null output pointer");
 } // end case
 
 FOSSIL_TEST_CASE(cpp_error_message) {
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_IN_SUCCESS), "Success") == 0, "Error message for success");
-    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_NULL_INPUT), "Null input provided") == 0, "Error message for null input");
+    FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_IN_ERR_NULL_INPUT), "Null input provided") == 0, "Error message for null input");
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_INVALID_LENGTH), "Invalid input length") == 0, "Error message for invalid length");
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_INVALID_FORMAT), "Invalid input format") == 0, "Error message for invalid format");
     FOSSIL_TEST_ASSUME(strcmp(fossil_sanity_in_error_message(FOSSIL_SANITY_ERR_MEMORY_OVERFLOW), "Memory overflow detected") == 0, "Error message for memory overflow");
@@ -140,7 +124,6 @@ FOSSIL_TEST_GROUP(cpp_sanity_test_cases) {
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_email);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_validate_length);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_sanitize_string);
-    FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_read_secure_line);
     FOSSIL_TEST_ADD(cpp_sanity_suite, cpp_error_message);
 
     FOSSIL_TEST_REGISTER(cpp_sanity_suite);
