@@ -73,14 +73,14 @@ int main(void) {
     char password[100];
     
     // Step 1: Get username input with validation
-    fossil_sanity_in_error_t input_result = fossil_sanity_in_get_username(username, sizeof(username));
+    fossil_sanity_validate_error_t input_result = fossil_sanity_validate_get_username(username, sizeof(username));
     if (input_result != FOSSIL_SANITY_IN_SUCCESS) {
         fossil_sanity_out_log("error.log", FOSSIL_SANITY_OUT_ERROR, "Failed to read username.");
         return 1;
     }
 
     // Step 2: Get password input securely
-    input_result = fossil_sanity_in_get_password(password, sizeof(password));
+    input_result = fossil_sanity_validate_get_password(password, sizeof(password));
     if (input_result != FOSSIL_SANITY_IN_SUCCESS) {
         fossil_sanity_out_log("error.log", FOSSIL_SANITY_OUT_ERROR, "Failed to read password.");
         return 1;
@@ -113,7 +113,7 @@ int main(void) {
 ### Explanation
 
 1. **Input Handling**:
-    - `fossil_sanity_in_get_username` and `fossil_sanity_in_get_password` are used to capture user input, with built-in validation for correctness and security.
+    - `fossil_sanity_validate_get_username` and `fossil_sanity_validate_get_password` are used to capture user input, with built-in validation for correctness and security.
     - If any input function fails, an error is logged using `fossil_sanity_out_log` to track the issue.
 
 2. **Output Handling**:
@@ -124,7 +124,7 @@ int main(void) {
 
 ---
 
-This example shows how to integrate input validation and logging with `fossil_sanity` in a typical C application. The functions `fossil_sanity_in_get_*` handle user input securely, while `fossil_sanity_out_log` ensures proper output and error tracking.
+This example shows how to integrate input validation and logging with `fossil_sanity` in a typical C application. The functions `fossil_sanity_validate_get_*` handle user input securely, while `fossil_sanity_out_log` ensures proper output and error tracking.
 
 ## **Configure Build Options**
 
