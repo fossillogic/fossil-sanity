@@ -1,6 +1,6 @@
 dir = include_directories('.')
 
-sanity_code = ['sanity.c']
+sanity_code = ['sanity.c', 'validate.c']
 
 fossil_sanity_lib = library('fossil-sanity',
     sanity_code,
