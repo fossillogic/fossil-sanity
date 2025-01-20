@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#ifdef defined(_WIN32) || defined(_WIN64)
+#ifdef __WIN32
 #include <windows.h>
 #else
 #include <termios.h>
@@ -76,7 +76,7 @@ bool fossil_sanity_in_is_valid_length(const char *input, size_t max_length) {
 
 // Sanitize string (remove non-printable characters)
 fossil_sanity_in_error_t fossil_sanity_in_sanitize_string(const char *input, char *output, size_t output_size) {
-    if (!input || !output) return FOSSIL_SANITY_ERR_NULL_INPUT;
+    if (!input || !output) return FOSSIL_SANITY_IN_ERR_NULL_INPUT;
     size_t input_len = strlen(input);
     if (input_len >= output_size) return FOSSIL_SANITY_ERR_INVALID_LENGTH;
 
@@ -92,7 +92,7 @@ fossil_sanity_in_error_t fossil_sanity_in_sanitize_string(const char *input, cha
 
 // Securely read a line of input
 fossil_sanity_in_error_t fossil_sanity_in_read_secure_line(char *buffer, size_t buffer_size) {
-    if (!buffer) return FOSSIL_SANITY_ERR_NULL_INPUT;
+    if (!buffer) return FOSSIL_SANITY_IN_ERR_NULL_INPUT;
     if (!fgets(buffer, buffer_size, stdin)) {
         return FOSSIL_SANITY_ERR_INVALID_FORMAT;
     }
@@ -109,7 +109,7 @@ fossil_sanity_in_error_t fossil_sanity_in_read_secure_line(char *buffer, size_t 
 const char *fossil_sanity_in_error_message(fossil_sanity_in_error_t error) {
     switch (error) {
         case FOSSIL_SANITY_IN_SUCCESS: return "Success";
-        case FOSSIL_SANITY_ERR_NULL_INPUT: return "Null input provided";
+        case FOSSIL_SANITY_IN_ERR_NULL_INPUT: return "Null input provided";
         case FOSSIL_SANITY_ERR_INVALID_LENGTH: return "Invalid input length";
         case FOSSIL_SANITY_ERR_INVALID_FORMAT: return "Invalid input format";
         case FOSSIL_SANITY_ERR_MEMORY_OVERFLOW: return "Memory overflow detected";
