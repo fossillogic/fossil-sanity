@@ -50,16 +50,16 @@ void fossil_sanity_parser_add_subcommand(const char *name, const char *descripti
 
 // Parse the CLI arguments
 int fossil_sanity_parser_parse(int argc, char **argv) {
-    for (size_t i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         // Check for subcommand
-        for (size_t j = 0; j < subcommand_count; ++j) {
+        for (int j = 0; j < subcommand_count; ++j) {
             if (strcmp(argv[i], subcommands[j].name) == 0) {
                 return subcommands[j].handler(argc - i, &argv[i]);
             }
         }
 
         // Check for options
-        for (size_t j = 0; j < option_count; ++j) {
+        for (int j = 0; j < option_count; ++j) {
             if (strcmp(argv[i], options[j].name) == 0 || 
                (options[j].short_name && argv[i][0] == '-' && argv[i][1] == options[j].short_name)) {
                 switch (options[j].type) {
@@ -94,13 +94,13 @@ int fossil_sanity_parser_parse(int argc, char **argv) {
 // Print help for all commands and options
 void fossil_sanity_parser_print_help(void) {
     printf("Usage:\n");
-    for (size_t i = 0; i < subcommand_count; ++i) {
+    for (int i = 0; i < subcommand_count; ++i) {
         printf("  %s: %s\n", subcommands[i].name, subcommands[i].description);
-        for (size_t j = 0; j < subcommands[i].option_count; ++j) {
+        for (int j = 0; j < subcommands[i].option_count; ++j) {
             printf("    --%s, -%c: %s\n", subcommands[i].options[j].name, subcommands[i].options[j].short_name, subcommands[i].options[j].description);
         }
     }
-    for (size_t i = 0; i < option_count; ++i) {
+    for (int i = 0; i < option_count; ++i) {
         printf("  --%s, -%c: %s\n", options[i].name, options[i].short_name, options[i].description);
     }
 }
@@ -161,7 +161,7 @@ int fossil_sanity_parser_load_ini(const char *file_path) {
             char *value = trim_whitespace(equals + 1);
 
             // Match key with options
-            for (size_t i = 0; i < option_count; i++) {
+            for (int i = 0; i < option_count; i++) {
                 if (strcmp(options[i].name, key) == 0) {
                     switch (options[i].type) {
                         case FOSSIL_SANITY_PARSER_TYPE_BOOL:
@@ -205,7 +205,7 @@ int fossil_sanity_parser_save_ini(const char *file_path) {
     fprintf(file, "# Generated INI file\n");
     fprintf(file, "\n[settings]\n");
 
-    for (size_t i = 0; i < option_count; i++) {
+    for (int i = 0; i < option_count; i++) {
         switch (options[i].type) {
             case FOSSIL_SANITY_PARSER_TYPE_BOOL:
                 fprintf(file, "%s=%s\n", options[i].name, (*(int *)options[i].value) ? "true" : "false");
@@ -237,16 +237,21 @@ int fossil_sanity_parser_save_ini(const char *file_path) {
 // AI enhancements
 // ==================================================================
 
+// Minimum of two integers
+static int fmin(int a, int b) {
+    return (a < b) ? a : b;
+}
+
 // Levenshtein distance calculation
 static int levenshtein_distance(const char *s1, const char *s2) {
     int len1 = strlen(s1), len2 = strlen(s2);
     int dp[len1 + 1][len2 + 1];
 
-    for (size_t i = 0; i <= len1; ++i) dp[i][0] = i;
-    for (size_t j = 0; j <= len2; ++j) dp[0][j] = j;
+    for (int i = 0; i <= len1; ++i) dp[i][0] = i;
+    for (int j = 0; j <= len2; ++j) dp[0][j] = j;
 
-    for (size_t i = 1; i <= len1; ++i) {
-        for (size_t j = 1; j <= len2; ++j) {
+    for (int i = 1; i <= len1; ++i) {
+        for (int j = 1; j <= len2; ++j) {
             int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
             dp[i][j] = fmin(dp[i - 1][j] + 1,       // Deletion
                             fmin(dp[i][j - 1] + 1,  // Insertion
@@ -281,7 +286,7 @@ void fossil_sanity_parser_suggest_correction(const char *invalid_command) {
 
 // Set defaults for options using AI logic
 void fossil_sanity_parser_set_defaults_with_ai(void) {
-    for (size_t i = 0; i < option_count; ++i) {
+    for (int i = 0; i < option_count; ++i) {
         // Handle each type of option intelligently
         switch (options[i].type) {
             case FOSSIL_SANITY_PARSER_TYPE_BOOL:
