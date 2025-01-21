@@ -20,6 +20,9 @@
 #include <limits.h>
 #include <stdbool.h>
 
+extern char *_custom_strdup(const char *str);
+
+
 // Static storage for options and subcommands
 #define MAX_OPTIONS 100
 #define MAX_SUBCOMMANDS 10
@@ -74,13 +77,13 @@ int fossil_sanity_parser_parse(int argc, char **argv) {
                     case FOSSIL_SANITY_PARSER_TYPE_STRING:
                         if (i + 1 < argc) {
                             free(*(char **)options[j].value);  // Free existing memory
-                            *(char **)options[j].value = strdup(argv[++i]);
+                            *(char **)options[j].value = _custom_strdup(argv[++i]);
                         } else return -1;
                         break;
                     case FOSSIL_SANITY_PARSER_TYPE_ARRAY:
                         if (i + 1 < argc) {
                             free(*(char **)options[j].value);  // Free existing memory
-                            *(char **)options[j].value = strdup(argv[++i]);
+                            *(char **)options[j].value = _custom_strdup(argv[++i]);
                         } else return -1;
                         break;
                     case FOSSIL_SANITY_PARSER_TYPE_FEATURE:
