@@ -269,7 +269,7 @@ void fossil_sanity_parser_suggest_correction(const char *invalid_command) {
     int best_match_index = -1;
     int min_distance = INT_MAX;
 
-    for (size_t i = 0; i < option_count; ++i) {
+    for (int i = 0; i < option_count; ++i) {
         int distance = levenshtein_distance(invalid_command, options[i].name);
         if (distance < min_distance) {
             min_distance = distance;
