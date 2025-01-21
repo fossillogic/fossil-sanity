@@ -54,7 +54,7 @@ FOSSIL_TEST_CASE(cpp_parser_add_option) {
     fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
 
     // Assuming we have a way to simulate command-line input
-    char *argv[] = {"program", "--enable-feature", "--set-value", "42", "--set-name", "test"};
+    char *argv[] = {const_cast<char *>("program"), const_cast<char *>("--enable-feature"), const_cast<char *>("--set-value"), const_cast<char *>("42"), const_cast<char *>("--set-name"), const_cast<char *>("test")};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
     FOSSIL_TEST_ASSUME(fossil_sanity_parser_parse(argc, argv) == 0, "Parser should succeed");
@@ -63,10 +63,12 @@ FOSSIL_TEST_CASE(cpp_parser_add_option) {
     FOSSIL_TEST_ASSUME(strcmp(string_option, "test") == 0, "String option should be 'test'");
 } // end case
 
-bool subcommand_called = false;
+bool subcommand_call = false;
 
 int subcommand_handler(int argc, char **argv) {
-    subcommand_called = true;
+    (void)argc;
+    (void)argv;
+    subcommand_call = true;
     return 0;
 }
 
@@ -78,11 +80,11 @@ FOSSIL_TEST_CASE(cpp_parser_add_subcommand) {
     fossil_sanity_parser_add_subcommand("subcmd", "Test subcommand", options, 1, subcommand_handler);
 
     // Assuming we have a way to simulate command-line input
-    char *argv[] = {"program", "subcmd", "--enable-feature"};
+    char *argv[] = {const_cast<char *>("program"), const_cast<char *>("subcmd"), const_cast<char *>("--enable-feature")};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
     FOSSIL_TEST_ASSUME(fossil_sanity_parser_parse(argc, argv) == 0, "Parser should succeed");
-    FOSSIL_TEST_ASSUME(subcommand_called == true, "Subcommand handler should be called");
+    FOSSIL_TEST_ASSUME(subcommand_call == true, "Subcommand handler should be called");
 } // end case
 
 FOSSIL_TEST_CASE(cpp_parser_load_ini) {

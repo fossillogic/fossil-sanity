@@ -66,6 +66,8 @@ FOSSIL_TEST_CASE(c_parser_add_option) {
 bool subcommand_called = false;
 
 int subcommand_handler(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
     subcommand_called = true;
     return 0;
 }
