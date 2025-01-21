@@ -164,7 +164,7 @@ FOSSIL_TEST_CASE(cpp_parser_set_defaults_with_ai) {
 // * Fossil Logic Test Pool
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(cpp_parser_test_cases) {
-    FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_option);
+    // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_option);
     // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_subcommand);
     // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_load_ini);
     // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_save_ini);

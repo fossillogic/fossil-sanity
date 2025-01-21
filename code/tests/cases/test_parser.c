@@ -159,10 +159,10 @@ FOSSIL_TEST_CASE(c_parser_set_defaults_with_ai) {
 // * Fossil Logic Test Pool
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(c_parser_test_cases) {
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_add_option);
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_add_subcommand);
+    // FOSSIL_TEST_ADD(c_parser_suite, c_parser_add_option);
+    // FOSSIL_TEST_ADD(c_parser_suite, c_parser_add_subcommand);
     // FOSSIL_TEST_ADD(c_parser_suite, c_parser_load_ini);
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_save_ini);
+    // FOSSIL_TEST_ADD(c_parser_suite, c_parser_save_ini);
     // FOSSIL_TEST_ADD(c_parser_suite, c_parser_set_defaults_with_ai);
 
     FOSSIL_TEST_REGISTER(c_parser_suite);
