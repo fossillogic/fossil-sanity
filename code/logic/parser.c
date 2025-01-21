@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -236,11 +237,6 @@ int fossil_sanity_parser_save_ini(const char *file_path) {
 // ==================================================================
 // AI enhancements
 // ==================================================================
-
-// Minimum of two integers
-static int fmin(int a, int b) {
-    return (a < b) ? a : b;
-}
 
 // Levenshtein distance calculation
 static int levenshtein_distance(const char *s1, const char *s2) {
