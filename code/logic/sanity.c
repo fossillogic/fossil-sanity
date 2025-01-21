@@ -12,169 +12,234 @@
  * -----------------------------------------------------------------------------
  */
 #include "fossil/sanity/sanity.h"
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
-
-#ifdef __WIN32
-#include <windows.h>
-#else
-#include <termios.h>
 #include <unistd.h>
-#endif
 
-// Sanitize string (removes non-printable characters)
-fossil_sanity_out_error_t fossil_sanity_out_sanitize_string(const char *input, char *output, size_t output_size) {
-    if (!input || !output) return FOSSIL_SANITY_OUT_ERR_NULL_INPUT;
-    size_t input_len = strlen(input);
-    if (input_len >= output_size) return FOSSIL_SANITY_OUT_ERR_BUFFER_OVERFLOW;
+char *_custom_strdup(const char *str) {
+    if (!str) return NULL;
+    size_t len = strlen(str);
+    char *copy = (char *)malloc(len + 1);
+    if (!copy) return NULL;
+    strcpy(copy, str);
+    return copy;
+}
 
-    size_t j = 0;
-    for (size_t i = 0; i < input_len; ++i) {
-        if (isprint((unsigned char)input[i])) {
-            output[j++] = input[i];
+// Static variable to hold the smart log format setting
+static bool smart_log_format = false;
+
+// Initialize the log queue
+void fossil_sanity_log_init(fossil_sanity_log_queue_t *queue) {
+    queue->head = NULL;
+    queue->tail = NULL;
+}
+
+// Push a log entry into the queue based on priority and severity
+void fossil_sanity_log_push(fossil_sanity_log_queue_t *queue, const char *message, int priority, int severity) {
+    fossil_sanity_log_entry_t *new_entry = (fossil_sanity_log_entry_t *)malloc(sizeof(fossil_sanity_log_entry_t));
+    if (!new_entry) {
+        perror("Failed to allocate memory for log entry");
+        return;
+    }
+
+    new_entry->priority = priority;
+    new_entry->severity = severity;
+    strncpy(new_entry->message, message, MAX_LOG_MESSAGE_LENGTH - 1);
+    new_entry->message[MAX_LOG_MESSAGE_LENGTH - 1] = '\0';  // Ensure null-termination
+
+    new_entry->next = NULL;
+    new_entry->prev = NULL;
+
+    // Add the new log entry to the queue based on priority (Descending order)
+    if (!queue->head) {
+        queue->head = new_entry;
+        queue->tail = new_entry;
+    } else {
+        fossil_sanity_log_entry_t *current = queue->head;
+        while (current && current->priority >= priority) {
+            current = current->next;
+        }
+        if (!current) {
+            // Add to the tail
+            queue->tail->next = new_entry;
+            new_entry->prev = queue->tail;
+            queue->tail = new_entry;
+        } else if (current == queue->head) {
+            // Insert at the front
+            new_entry->next = queue->head;
+            queue->head->prev = new_entry;
+            queue->head = new_entry;
+        } else {
+            // Insert between current and current->prev
+            new_entry->prev = current->prev;
+            new_entry->next = current;
+            current->prev->next = new_entry;
+            current->prev = new_entry;
         }
     }
-    output[j] = '\0';
-    return FOSSIL_SANITY_OUT_SUCCESS;
 }
 
-// Logging function (console output)
-void fossil_sanity_out_log(fossil_sanity_out_severity_t severity, const char *message, ...) {
-    const char *severity_str;
-    switch (severity) {
-        case FOSSIL_SANITY_OUT_INFO:    severity_str = "[INFO]";    break;
-        case FOSSIL_SANITY_OUT_WARNING: severity_str = "[WARNING]"; break;
-        case FOSSIL_SANITY_OUT_ERROR:   severity_str = "[ERROR]";   break;
-        case FOSSIL_SANITY_OUT_DEBUG:   severity_str = "[DEBUG]";   break;
-        default:                        severity_str = "[UNKNOWN]"; break;
+// Pop the log with the highest priority
+char *fossil_sanity_log_pop(fossil_sanity_log_queue_t *queue) {
+    if (!queue->head) {
+        return NULL;
     }
 
-    char sanitized_message[FOSSIL_SANITY_MAX_STR_LEN];
-    fossil_sanity_out_sanitize_string(message, sanitized_message, sizeof(sanitized_message));
-
-    va_list args;
-    va_start(args, message);
-    printf("%s ", severity_str);
-    vprintf(sanitized_message, args);
-    printf("\n");
-    va_end(args);
-}
-
-// Logging function (file output)
-void fossil_sanity_out_log_to_file(const char *file_path, fossil_sanity_out_severity_t severity, const char *message, ...) {
-    if (!file_path || !message) return;
-
-    FILE *file = fopen(file_path, "a");
-    if (!file) return;
-
-    const char *severity_str;
-    switch (severity) {
-        case FOSSIL_SANITY_OUT_INFO:    severity_str = "[INFO]";    break;
-        case FOSSIL_SANITY_OUT_WARNING: severity_str = "[WARNING]"; break;
-        case FOSSIL_SANITY_OUT_ERROR:   severity_str = "[ERROR]";   break;
-        case FOSSIL_SANITY_OUT_DEBUG:   severity_str = "[DEBUG]";   break;
-        default:                        severity_str = "[UNKNOWN]"; break;
+    fossil_sanity_log_entry_t *log_to_pop = queue->head;
+    char *message = _custom_strdup(log_to_pop->message);
+    
+    queue->head = log_to_pop->next;
+    if (queue->head) {
+        queue->head->prev = NULL;
+    } else {
+        queue->tail = NULL;  // Queue is empty now
     }
 
-    char sanitized_message[FOSSIL_SANITY_MAX_STR_LEN];
-    fossil_sanity_out_sanitize_string(message, sanitized_message, sizeof(sanitized_message));
-
-    va_list args;
-    va_start(args, message);
-    fprintf(file, "%s ", severity_str);
-    vfprintf(file, sanitized_message, args);
-    fprintf(file, "\n");
-    va_end(args);
-
-    fclose(file);
+    free(log_to_pop);
+    return message;
 }
 
-// Notification function (console notification)
-void fossil_sanity_out_notify(const char *title, const char *message) {
-    printf("[NOTIFICATION] %s: %s\n", title, message);
-}
-
-// Notification function with severity
-void fossil_sanity_out_notify_with_severity(fossil_sanity_out_severity_t severity, const char *title, const char *message) {
-    const char *severity_str;
-    switch (severity) {
-        case FOSSIL_SANITY_OUT_INFO:    severity_str = "[INFO]";    break;
-        case FOSSIL_SANITY_OUT_WARNING: severity_str = "[WARNING]"; break;
-        case FOSSIL_SANITY_OUT_ERROR:   severity_str = "[ERROR]";   break;
-        case FOSSIL_SANITY_OUT_DEBUG:   severity_str = "[DEBUG]";   break;
-        default:                        severity_str = "[UNKNOWN]"; break;
-    }
-    printf("%s [NOTIFICATION] %s: %s\n", severity_str, title, message);
-}
-
-// Secure print function
-fossil_sanity_out_error_t fossil_sanity_out_print_secure(const char *format, ...) {
-    if (!format) return FOSSIL_SANITY_OUT_ERR_NULL_INPUT;
-
-    char sanitized_format[FOSSIL_SANITY_MAX_STR_LEN];
-    if (fossil_sanity_out_sanitize_string(format, sanitized_format, sizeof(sanitized_format)) != FOSSIL_SANITY_OUT_SUCCESS) {
-        return FOSSIL_SANITY_OUT_ERR_INVALID_FORMAT;
-    }
-
-    va_list args;
-    va_start(args, format);
-    vprintf(sanitized_format, args);
-    va_end(args);
-
-    return FOSSIL_SANITY_OUT_SUCCESS;
-}
-
-// Get error message
-const char *fossil_sanity_out_error_message(fossil_sanity_out_error_t error) {
-    switch (error) {
-        case FOSSIL_SANITY_OUT_SUCCESS:        return "Success";
-        case FOSSIL_SANITY_OUT_ERR_NULL_INPUT: return "Null input provided";
-        case FOSSIL_SANITY_OUT_ERR_INVALID_FORMAT: return "Invalid format";
-        case FOSSIL_SANITY_OUT_ERR_BUFFER_OVERFLOW: return "Buffer overflow detected";
-        default:                                return "Unknown error";
+// Print all logs in the queue
+void fossil_sanity_log_print(fossil_sanity_log_queue_t *queue) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        if (smart_log_format) {
+            switch (current->priority) {
+                case FOSSIL_SANITY_LOG_LEVEL_DEBUG:
+                    printf("[DEBUG]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_INFO:
+                    printf("[INFO]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_WARNING:
+                    printf("[WARNING]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_ERROR:
+                    printf("[ERROR]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_FATAL:
+                    printf("[FATAL]: %s\n", current->message);
+                    break;
+                default:
+                    printf("[UNKNOWN]: %s\n", current->message);
+            }
+        } else {
+            printf("%s\n", current->message);
+        }
+        current = current->next;
     }
 }
 
-fossil_sanity_out_error_t fossil_sanity_out_log_with_rotation(const char *file_path, size_t max_size, fossil_sanity_out_severity_t severity, const char *message, ...) {
-    if (!file_path || !message) return FOSSIL_SANITY_OUT_ERR_NULL_INPUT;
+// Clear all logs in the queue
+void fossil_sanity_log_clear(fossil_sanity_log_queue_t *queue) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        fossil_sanity_log_entry_t *next = current->next;
+        free(current);
+        current = next;
+    }
+    queue->head = queue->tail = NULL;
+}
 
-    // Check file size
-    FILE *file = fopen(file_path, "a+");
-    if (!file) return FOSSIL_SANITY_OUT_ERR_NULL_INPUT;
+// Sort logs in descending order of priority (Highest priority first)
+void fossil_sanity_log_sort(fossil_sanity_log_queue_t *queue) {
+    if (!queue->head) return;
+
+    bool swapped;
+    do {
+        swapped = false;
+        fossil_sanity_log_entry_t *current = queue->head;
+        while (current && current->next) {
+            if (current->priority < current->next->priority) {
+                // Swap the log entries
+                int temp_priority = current->priority;
+                int temp_severity = current->severity;
+                char temp_message[MAX_LOG_MESSAGE_LENGTH];
+                strcpy(temp_message, current->message);
+
+                current->priority = current->next->priority;
+                current->severity = current->next->severity;
+                strcpy(current->message, current->next->message);
+
+                current->next->priority = temp_priority;
+                current->next->severity = temp_severity;
+                strcpy(current->next->message, temp_message);
+
+                swapped = true;
+            }
+            current = current->next;
+        }
+    } while (swapped);
+}
+
+// Filter logs based on minimum priority (Only logs with higher or equal priority will be shown)
+void fossil_sanity_log_filter(fossil_sanity_log_queue_t *queue, int min_priority) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        if (current->priority < min_priority) {
+            // Remove log entry
+            fossil_sanity_log_entry_t *to_remove = current;
+            current = current->next;
+            if (to_remove->prev) to_remove->prev->next = to_remove->next;
+            if (to_remove->next) to_remove->next->prev = to_remove->prev;
+
+            if (to_remove == queue->head) queue->head = current;
+            if (to_remove == queue->tail) queue->tail = current;
+
+            free(to_remove);
+        } else {
+            current = current->next;
+        }
+    }
+}
+
+// Search for a log entry containing the keyword
+char *fossil_sanity_log_search(fossil_sanity_log_queue_t *queue, const char *keyword) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        if (strstr(current->message, keyword)) {
+            return current->message;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+// Rotate log file when the size exceeds a threshold
+void fossil_sanity_log_rotate(fossil_sanity_log_rotation_t *rotation) {
+    FILE *file = fopen(rotation->log_file_path, "a");
+    if (!file) {
+        perror("Failed to open log file");
+        return;
+    }
 
     fseek(file, 0, SEEK_END);
-    size_t file_size = ftell(file);
-    fclose(file);
-
-    // Rotate log if needed
-    if (file_size >= max_size) {
-        char rotated_path[1024];
-        snprintf(rotated_path, sizeof(rotated_path), "%s.old", file_path);
-        rename(file_path, rotated_path);
+    rotation->current_size = ftell(file);
+    if (rotation->current_size > MAX_LOG_FILE_SIZE) {
+        // Rotate the log file (move the current log to a backup and create a new one)
+        fclose(file);
+        rename(rotation->log_file_path, "log_backup.txt");
+        file = fopen(rotation->log_file_path, "w");
     }
 
-    // Write log
-    file = fopen(file_path, "a");
-    if (!file) return FOSSIL_SANITY_OUT_ERR_NULL_INPUT;
-
-    const char *severity_str = "UNKNOWN";
-    switch (severity) {
-        case FOSSIL_SANITY_OUT_INFO:    severity_str = "INFO";    break;
-        case FOSSIL_SANITY_OUT_WARNING: severity_str = "WARNING"; break;
-        case FOSSIL_SANITY_OUT_ERROR:   severity_str = "ERROR";   break;
-        case FOSSIL_SANITY_OUT_DEBUG:   severity_str = "DEBUG";   break;
-    }
-
-    va_list args;
-    va_start(args, message);
-    fprintf(file, "[%s] ", severity_str);
-    vfprintf(file, message, args);
-    fprintf(file, "\n");
-    va_end(args);
-
     fclose(file);
-    return FOSSIL_SANITY_OUT_SUCCESS;
+}
+
+// Send a notification for critical logs (e.g., FATAL level)
+void fossil_sanity_log_notify(const char *message) {
+    printf("ALERT: Critical log - %s\n", message);  // Example notification (can be email or SMS in real applications)
+}
+
+// Log with smart formatting based on severity and level
+void fossil_sanity_log_smart_log(fossil_sanity_log_queue_t *queue, int level, int severity, const char *message) {
+    if (severity == FOSSIL_SANITY_LOG_SEVERITY_HIGH) {
+        fossil_sanity_log_notify(message);  // Notify if severity is high
+    }
+    fossil_sanity_log_push(queue, message, level, severity);
+}
+
+// Enable or disable smart log format
+void fossil_sanity_log_set_smart_format(bool enable) {
+    smart_log_format = enable;
 }
