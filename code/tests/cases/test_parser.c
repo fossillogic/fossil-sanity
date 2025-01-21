@@ -49,9 +49,9 @@ FOSSIL_TEST_CASE(c_parser_add_option) {
     int int_option = 0;
     char string_option[100] = {0};
 
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_OPTION_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_OPTION_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_OPTION_STRING, string_option, "Set string value");
+    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
+    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
+    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
 
     // Assuming we have a way to simulate command-line input
     char *argv[] = {"program", "--enable-feature", "--set-value", "42", "--set-name", "test"};
@@ -72,7 +72,7 @@ int subcommand_handler(int argc, char **argv) {
 
 FOSSIL_TEST_CASE(c_parser_add_subcommand) {
     fossil_sanity_parser_option_t options[] = {
-        {"--enable-feature", 'e', FOSSIL_SANITY_PARSER_OPTION_BOOL, NULL, "Enable feature"}
+        {"--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, NULL, "Enable feature"}
     };
 
     fossil_sanity_parser_add_subcommand("subcmd", "Test subcommand", options, 1, subcommand_handler);
@@ -96,9 +96,9 @@ FOSSIL_TEST_CASE(c_parser_load_ini) {
     int int_option = 0;
     char string_option[100] = {0};
 
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_OPTION_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_OPTION_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_OPTION_STRING, string_option, "Set string value");
+    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
+    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
+    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
 
     FOSSIL_TEST_ASSUME(fossil_sanity_parser_load_ini(ini_file_path) == 0, "INI file should load successfully");
     FOSSIL_TEST_ASSUME(bool_option == true, "Boolean option should be true");
@@ -116,9 +116,9 @@ FOSSIL_TEST_CASE(c_parser_save_ini) {
     int int_option = 42;
     char string_option[100] = "test";
 
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_OPTION_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_OPTION_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_OPTION_STRING, string_option, "Set string value");
+    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
+    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
+    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
 
     FOSSIL_TEST_ASSUME(fossil_sanity_parser_save_ini(ini_file_path) == 0, "INI file should save successfully");
 
@@ -141,9 +141,9 @@ FOSSIL_TEST_CASE(c_parser_set_defaults_with_ai) {
     int int_option = 0;
     char string_option[100] = {0};
 
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_OPTION_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_OPTION_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_OPTION_STRING, string_option, "Set string value");
+    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
+    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
+    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
 
     fossil_sanity_parser_set_defaults_with_ai();
 
