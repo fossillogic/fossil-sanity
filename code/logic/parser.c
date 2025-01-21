@@ -72,15 +72,18 @@ int fossil_sanity_parser_parse(int argc, char **argv) {
                         else return -1;
                         break;
                     case FOSSIL_SANITY_PARSER_TYPE_STRING:
-                        if (i + 1 < argc) *(char **)options[j].value = argv[++i];
-                        else return -1;
+                        if (i + 1 < argc) {
+                            free(*(char **)options[j].value);  // Free existing memory
+                            *(char **)options[j].value = strdup(argv[++i]);
+                        } else return -1;
                         break;
                     case FOSSIL_SANITY_PARSER_TYPE_ARRAY:
-                        // Handle arrays (comma-separated values)
-                        *(char **)options[j].value = argv[++i];
+                        if (i + 1 < argc) {
+                            free(*(char **)options[j].value);  // Free existing memory
+                            *(char **)options[j].value = strdup(argv[++i]);
+                        } else return -1;
                         break;
                     case FOSSIL_SANITY_PARSER_TYPE_FEATURE:
-                        // Enable or disable feature
                         *(bool *)options[j].value = strcmp(argv[++i], "enable") == 0;
                         break;
                     default:
@@ -106,18 +109,35 @@ void fossil_sanity_parser_print_help(void) {
     }
 }
 
+// Cleanup function
+void fossil_sanity_parser_cleanup(void) {
+    for (int i = 0; i < option_count; ++i) {
+        if (options[i].type == FOSSIL_SANITY_PARSER_TYPE_STRING || options[i].type == FOSSIL_SANITY_PARSER_TYPE_ARRAY) {
+            free(*(char **)options[i].value);
+            *(char **)options[i].value = NULL;
+        }
+    }
+}
+
 // ==================================================================
 // INI file handling
 // ==================================================================
 
 // Helper function: Trim whitespace
 static char *trim_whitespace(char *str) {
-    char *end;
+    if (!str) return NULL;
+
+    // Trim leading whitespace
     while (isspace((unsigned char)*str)) str++;
-    if (*str == 0) return str;  // All spaces
-    end = str + strlen(str) - 1;
+
+    // If string is empty, return it
+    if (*str == '\0') return str;
+
+    // Trim trailing whitespace
+    char *end = str + strlen(str) - 1;
     while (end > str && isspace((unsigned char)*end)) end--;
     end[1] = '\0';
+
     return str;
 }
 
@@ -133,22 +153,23 @@ int fossil_sanity_parser_load_ini(const char *file_path) {
     char current_section[MAX_LINE_LENGTH] = {0};
 
     while (fgets(line, sizeof(line), file)) {
+        // Ensure null-termination of the line
+        line[MAX_LINE_LENGTH - 1] = '\0';
         char *trimmed = trim_whitespace(line);
-        if (*trimmed == '#' || *trimmed == ';' || *trimmed == '\0') {
+        if (!trimmed || *trimmed == '#' || *trimmed == ';' || *trimmed == '\0') {
             continue;  // Skip comments or empty lines
         }
 
         if (*trimmed == '[') {
             // Section line (e.g., [section])
             char *end = strchr(trimmed, ']');
-            if (end) {
-                *end = '\0';
-                strncpy(current_section, trimmed + 1, sizeof(current_section) - 1);
-            } else {
+            if (!end) {
                 fprintf(stderr, "Error: Malformed section header in INI file.\n");
                 fclose(file);
                 return -1;
             }
+            *end = '\0';
+            snprintf(current_section, sizeof(current_section), "%s", trimmed + 1);
         } else {
             // Key-value pair
             char *equals = strchr(trimmed, '=');
@@ -161,6 +182,12 @@ int fossil_sanity_parser_load_ini(const char *file_path) {
             char *key = trim_whitespace(trimmed);
             char *value = trim_whitespace(equals + 1);
 
+            if (!key || !value) {
+                fprintf(stderr, "Error: Missing key or value in INI file.\n");
+                fclose(file);
+                return -1;
+            }
+
             // Match key with options
             for (int i = 0; i < option_count; i++) {
                 if (strcmp(options[i].name, key) == 0) {
@@ -172,11 +199,10 @@ int fossil_sanity_parser_load_ini(const char *file_path) {
                             *(int *)options[i].value = atoi(value);
                             break;
                         case FOSSIL_SANITY_PARSER_TYPE_STRING:
-                            strncpy((char *)options[i].value, value, MAX_LINE_LENGTH - 1);
+                            snprintf((char *)options[i].value, MAX_LINE_LENGTH, "%s", value);
                             break;
                         case FOSSIL_SANITY_PARSER_TYPE_ARRAY:
-                            // For simplicity, store comma-separated values as a single string
-                            strncpy((char *)options[i].value, value, MAX_LINE_LENGTH - 1);
+                            snprintf((char *)options[i].value, MAX_LINE_LENGTH, "%s", value);
                             break;
                         case FOSSIL_SANITY_PARSER_TYPE_FEATURE:
                             *(int *)options[i].value = (strcmp(value, "enabled") == 0);
@@ -218,7 +244,7 @@ int fossil_sanity_parser_save_ini(const char *file_path) {
                 fprintf(file, "%s=%s\n", options[i].name, (char *)options[i].value);
                 break;
             case FOSSIL_SANITY_PARSER_TYPE_ARRAY:
-                fprintf(file, "%s=%s\n", options[i].name, (char *)options[i].value);  // Save as CSV
+                fprintf(file, "%s=%s\n", options[i].name, (char *)options[i].value);
                 break;
             case FOSSIL_SANITY_PARSER_TYPE_FEATURE:
                 fprintf(file, "%s=%s\n", options[i].name, (*(int *)options[i].value) ? "enabled" : "disabled");
@@ -230,7 +256,11 @@ int fossil_sanity_parser_save_ini(const char *file_path) {
         }
     }
 
-    fclose(file);
+    if (fclose(file) != 0) {
+        fprintf(stderr, "Error: Failed to close INI file '%s'.\n", file_path);
+        return -1;
+    }
+
     return 0;
 }
 
