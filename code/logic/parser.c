@@ -103,7 +103,8 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
                     } else if (arg->type == FOSSIL_SANITY_PARSER_STRING) {
                         arg->value = _custom_strdup(argv[j]);
                     } else if (arg->type == FOSSIL_SANITY_PARSER_INT) {
-                        arg->value = (void*)strtol(argv[j], NULL, 10);
+                        long int val = strtol(argv[j], NULL, 10);
+                        arg->value = (void*)(intptr_t)val; // Cast to intptr_t before casting to void*
                     }
                 }
                 break;
