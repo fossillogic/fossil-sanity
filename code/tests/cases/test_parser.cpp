@@ -14,6 +14,7 @@
  */
 #include <fossil/test/framework.h>
 #include <fossil/sanity/framework.h>
+#include <string>
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
@@ -72,7 +73,10 @@ FOSSIL_TEST_CASE(cpp_parser_parse_with_palette) {
     fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
     fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
 
-    char *argv[] = {"program", "test_command", "test_arg_value"};
+    std::string program = "program";
+    std::string test_command = "test_command";
+    std::string test_arg_value = "test_arg_value";
+    char *argv[] = {program.data(), test_command.data(), test_arg_value.data()};
     int argc = sizeof(argv) / sizeof(argv[0]);
     fossil_sanity_parser_parse(palette, argc, argv);
     // Assuming there's a way to verify the parsing result, e.g., by checking the command's internal state
