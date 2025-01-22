@@ -64,30 +64,84 @@ const char* suggest_command(const char *input, fossil_sanity_parser_palette_t *p
 // Functions
 // ==================================================================
 
-// Function to print all available commands and descriptions (--help)
-void print_help(const fossil_sanity_parser_palette_t *palette) {
-    printf("Available Commands:\n");
+void show_help(const char *command_name, const fossil_sanity_parser_palette_t *palette) {
     fossil_sanity_parser_command_t *command = palette->commands;
+
+    // If no specific command is provided, show all commands
+    if (!command_name) {
+        printf("Available commands:\n");
+        while (command) {
+            printf("  %s: %s\n", command->name, command->description);
+            command = command->next;
+        }
+        printf("\nUse '--help <command>' for details on a specific command.\n");
+        return;
+    }
+
+    // Search for the specific command
     while (command) {
-        printf("  %s: %s\n", command->name, command->description ? command->description : "No description available");
+        if (strcmp(command->name, command_name) == 0) {
+            printf("Command: %s\nDescription: %s\n", command->name, command->description);
+            printf("Arguments:\n");
+            fossil_sanity_parser_argument_t *arg = command->arguments;
+            while (arg) {
+                printf("  --%s (%s): %s\n", 
+                       arg->name, 
+                       arg->type == FOSSIL_SANITY_PARSER_BOOL ? "bool" :
+                       arg->type == FOSSIL_SANITY_PARSER_STRING ? "string" :
+                       arg->type == FOSSIL_SANITY_PARSER_INT ? "int" :
+                       "combo", 
+                       arg->value ? arg->value : "No default value");
+                if (arg->type == FOSSIL_SANITY_PARSER_COMBO) {
+                    printf("    Options: ");
+                    for (int i = 0; i < arg->combo_count; i++) {
+                        printf("%s%s", arg->combo_options[i], i == arg->combo_count - 1 ? "" : ", ");
+                    }
+                    printf("\n");
+                }
+                arg = arg->next;
+            }
+            return;
+        }
         command = command->next;
     }
+
+    // If the command is not found
+    fprintf(stderr, "Unknown command '%s'. Use '--help' to see available commands.\n", command_name);
 }
 
-// Function to print usage examples (--usage)
-void print_usage(const fossil_sanity_parser_palette_t *palette) {
-    printf("Usage Examples:\n");
+
+void show_usage(const char *command_name, const fossil_sanity_parser_palette_t *palette) {
     fossil_sanity_parser_command_t *command = palette->commands;
+
+    // Search for the specific command
     while (command) {
-        printf("  %s", command->name);
-        fossil_sanity_parser_argument_t *argument = command->arguments;
-        while (argument) {
-            printf(" [%s]", argument->name);
-            argument = argument->next;
+        if (strcmp(command->name, command_name) == 0) {
+            printf("Usage example for '%s':\n", command->name);
+            printf("  %s", command->name);
+
+            fossil_sanity_parser_argument_t *arg = command->arguments;
+            while (arg) {
+                printf(" --%s ", arg->name);
+                if (arg->type == FOSSIL_SANITY_PARSER_STRING) {
+                    printf("<string>");
+                } else if (arg->type == FOSSIL_SANITY_PARSER_INT) {
+                    printf("<int>");
+                } else if (arg->type == FOSSIL_SANITY_PARSER_BOOL) {
+                    printf("<true/false>");
+                } else if (arg->type == FOSSIL_SANITY_PARSER_COMBO) {
+                    printf("<%s>", arg->combo_options[0]); // Show first combo option
+                }
+                arg = arg->next;
+            }
+            printf("\n");
+            return;
         }
-        printf("\n");
         command = command->next;
     }
+
+    // If the command is not found
+    fprintf(stderr, "Unknown command '%s'. Use '--help' to see available commands.\n", command_name);
 }
 
 fossil_sanity_parser_palette_t *fossil_sanity_parser_create_palette(const char *name, const char *description) {
@@ -134,11 +188,21 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
     const char *command_name = argv[1];
 
     // Check for --help and --usage flags
-    if (strcmp(command_name, "--help") == 0) {
-        print_help(palette);
+    if (strcmp(argv[1], "--help") == 0) {
+        if (argc == 3) {
+            show_help(argv[2], palette); // Show help for a specific command
+        } else {
+            show_help(NULL, palette);   // Show general help
+        }
         return;
-    } else if (strcmp(command_name, "--usage") == 0) {
-        print_usage(palette);
+    }
+
+    if (strcmp(argv[1], "--usage") == 0) {
+        if (argc == 3) {
+            show_usage(argv[2], palette); // Show usage for a specific command
+        } else {
+            fprintf(stderr, "Usage: --usage <command>\n");
+        }
         return;
     }
 
