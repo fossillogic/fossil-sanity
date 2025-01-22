@@ -59,7 +59,7 @@ FOSSIL_TEST_CASE(c_parser_add_command) {
 
 FOSSIL_TEST_CASE(c_parser_add_argument) {
     fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
-    fossil_sanity_parser_command_t *command;
+    fossil_sanity_parser_command_t *command = NULL;
     fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
     fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
     // Assuming there's a way to verify the argument was added, e.g., by checking the command's internal state
@@ -68,7 +68,7 @@ FOSSIL_TEST_CASE(c_parser_add_argument) {
 
 FOSSIL_TEST_CASE(c_parser_parse_with_palette) {
     fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
-    fossil_sanity_parser_command_t *command;
+    fossil_sanity_parser_command_t *command = NULL;
     fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
     fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
 
