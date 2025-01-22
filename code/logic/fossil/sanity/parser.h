@@ -21,103 +21,84 @@
 extern "C" {
 #endif
 
-// Data types for parser options
+// Types of command argument
 typedef enum {
-    FOSSIL_SANITY_PARSER_TYPE_BOOL,
-    FOSSIL_SANITY_PARSER_TYPE_INT,
-    FOSSIL_SANITY_PARSER_TYPE_STRING,
-    FOSSIL_SANITY_PARSER_TYPE_ARRAY,
-    FOSSIL_SANITY_PARSER_TYPE_FEATURE
-} fossil_sanity_parser_option_type_t;
+    FOSSIL_SANITY_PARSER_BOOL,
+    FOSSIL_SANITY_PARSER_STRING,
+    FOSSIL_SANITY_PARSER_INT,
+    FOSSIL_SANITY_PARSER_COMBO
+} fossil_sanity_parser_arg_type_t;
 
-typedef struct {
-    const char *name;  // Long option name (e.g., "--enable-feature")
-    char short_name;   // Short option name (e.g., "-e")
-    fossil_sanity_parser_option_type_t type;  // Type of the option
-    void *value;       // Pointer to the value to store the result
-    const char *description;  // Description for help output
-} fossil_sanity_parser_option_t;
+// Structure to represent each argument in the command
+typedef struct fossil_sanity_parser_argument_s {
+    char *name;
+    fossil_sanity_parser_arg_type_t type;
+    void *value; // Holds the value depending on the argument type
+    struct fossil_sanity_parser_argument_s *next;
+} fossil_sanity_parser_argument_t;
 
-// CLI subcommand structure
-typedef struct {
-    const char *name;  // Subcommand name
-    fossil_sanity_parser_option_t *options;  // Options for the subcommand
-    int option_count;  // Number of options
-    const char *description;  // Description for the subcommand
-    int (*handler)(int argc, char **argv);  // Handler function for the subcommand
-} fossil_sanity_parser_subcommand_t;
+// Structure for a command
+typedef struct fossil_sanity_parser_command_s {
+    char *name;
+    char *description;
+    fossil_sanity_parser_argument_t *arguments;
+    struct fossil_sanity_parser_command_s *prev;
+    struct fossil_sanity_parser_command_s *next;
+} fossil_sanity_parser_command_t;
 
-typedef struct {
-    const char *file_path;  // Path to the INI file
-} fossil_sanity_parser_ini_t;
+// Structure for the command palette
+typedef struct fossil_sanity_parser_palette_s {
+    char *name;
+    char *description;
+    fossil_sanity_parser_command_t *commands;
+} fossil_sanity_parser_palette_t;
 
 // ==================================================================
 // Functions
 // ==================================================================
 
-/** @brief Adds a CLI option.
+/**
+ * @brief Creates a new parser palette.
  * 
- * @param name The long name of the option (e.g., "--enable-feature").
- * @param short_name The short name of the option (e.g., "-e").
- * @param type The type of the option (e.g., bool, int, string).
- * @param value Pointer to the variable where the value will be stored.
- * @param description Description of the option for help output.
+ * @param name The name of the palette.
+ * @param description A description of the palette.
+ * @return A pointer to the newly created parser palette.
  */
-void fossil_sanity_parser_add_option(const char *name, char short_name, fossil_sanity_parser_option_type_t type, void *value, const char *description);
+ fossil_sanity_parser_palette_t* fossil_sanity_parser_create_palette(const char *name, const char *description);
 
-/** @brief Adds a subcommand.
+/**
+ * @brief Adds a command to the parser palette.
  * 
- * @param name The name of the subcommand.
- * @param description Description of the subcommand for help output.
- * @param options Array of options for the subcommand.
- * @param option_count Number of options in the array.
- * @param handler Function to handle the subcommand.
+ * @param palette The parser palette to which the command will be added.
+ * @param command_name The name of the command.
+ * @param description A description of the command.
  */
-void fossil_sanity_parser_add_subcommand(const char *name, const char *description, fossil_sanity_parser_option_t *options, int option_count, int (*handler)(int argc, char **argv));
+void fossil_sanity_parser_add_command(fossil_sanity_parser_palette_t *palette, const char *command_name, const char *description);
 
-/** @brief Parses the command-line arguments.
+/**
+ * @brief Adds an argument to a command.
  * 
- * @param argc Argument count.
- * @param argv Argument vector.
- * @return 0 on success, -1 on error.
+ * @param command The command to which the argument will be added.
+ * @param arg_name The name of the argument.
+ * @param arg_type The type of the argument.
  */
-int fossil_sanity_parser_parse(int argc, char **argv);
+void fossil_sanity_parser_add_argument(fossil_sanity_parser_command_t *command, const char *arg_name, fossil_sanity_parser_arg_type_t arg_type);
 
-/** @brief Prints help for all commands and options.
- */
-void fossil_sanity_parser_print_help(void);
-
-// ==================================================================
-// INI functions
-// ==================================================================
-
-/** @brief Loads an INI file and populates the options.
+/**
+ * @brief Parses the command-line arguments using the parser palette.
  * 
- * @param file_path Path to the INI file.
- * @return 0 on success, -1 on error.
+ * @param palette The parser palette to use for parsing.
+ * @param argc The number of command-line arguments.
+ * @param argv The command-line arguments.
  */
-int fossil_sanity_parser_load_ini(const char *file_path);
-
-/** @brief Saves the current options to an INI file.
+void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int argc, char **argv);
+ 
+/**
+ * @brief Frees the memory allocated for the parser palette.
  * 
- * @param file_path Path to the INI file.
- * @return 0 on success, -1 on error.
+ * @param palette The parser palette to be freed.
  */
-int fossil_sanity_parser_save_ini(const char *file_path);
-
-// ==================================================================
-// AI enhancements
-// ==================================================================
-
-/** @brief Suggests corrections for invalid commands.
- * 
- * @param invalid_command The invalid command to suggest corrections for.
- */
-void fossil_sanity_parser_suggest_correction(const char *invalid_command);
-
-/** @brief Sets default values for options using AI.
- */
-void fossil_sanity_parser_set_defaults_with_ai(void);
+void fossil_sanity_parser_free(fossil_sanity_parser_palette_t *palette);
 
 #ifdef __cplusplus
 }
