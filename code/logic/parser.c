@@ -16,128 +16,170 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 extern char *_custom_strdup(const char *str);
 
 
-// Helper function to create a new argument
-static fossil_sanity_parser_argument_t* fossil_sanity_parser_create_argument(const char *name, fossil_sanity_parser_arg_type_t type) {
-    fossil_sanity_parser_argument_t *arg = (fossil_sanity_parser_argument_t*)malloc(sizeof(fossil_sanity_parser_argument_t));
-    arg->name = _custom_strdup(name);
-    arg->type = type;
-    arg->value = NULL;
-    arg->next = NULL;
-    return arg;
+// ==================================================================
+// AI magic tricks
+// ==================================================================
+
+// Function to calculate Levenshtein Distance
+int levenshtein_distance(const char *s1, const char *s2) {
+    int len1 = strlen(s1), len2 = strlen(s2);
+    int dp[len1 + 1][len2 + 1];
+
+    for (int i = 0; i <= len1; i++) dp[i][0] = i;
+    for (int j = 0; j <= len2; j++) dp[0][j] = j;
+
+    for (int i = 1; i <= len1; i++) {
+        for (int j = 1; j <= len2; j++) {
+            int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+            dp[i][j] = fmin(fmin(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+        }
+    }
+    return dp[len1][len2];
 }
 
-// Helper function to create a new command
-static fossil_sanity_parser_command_t* fossil_sanity_parser_create_command(const char *name, const char *description) {
-    fossil_sanity_parser_command_t *command = (fossil_sanity_parser_command_t*)malloc(sizeof(fossil_sanity_parser_command_t));
-    command->name = _custom_strdup(name);
-    command->description = _custom_strdup(description);
-    command->arguments = NULL;
-    command->prev = NULL;
-    command->next = NULL;
-    return command;
+// Function to find the closest command match
+const char* suggest_command(const char *input, fossil_sanity_parser_palette_t *palette) {
+    fossil_sanity_parser_command_t *current = palette->commands;
+    const char *best_match = NULL;
+    int min_distance = INT_MAX;
+
+    while (current) {
+        int distance = levenshtein_distance(input, current->name);
+        if (distance < min_distance) {
+            min_distance = distance;
+            best_match = current->name;
+        }
+        current = current->next;
+    }
+    return (min_distance <= 3) ? best_match : NULL; // Suggest only if close enough
 }
 
-// Create a command palette
-fossil_sanity_parser_palette_t* fossil_sanity_parser_create_palette(const char *name, const char *description) {
-    fossil_sanity_parser_palette_t *palette = (fossil_sanity_parser_palette_t*)malloc(sizeof(fossil_sanity_parser_palette_t));
+// ==================================================================
+// Functions
+// ==================================================================
+
+fossil_sanity_parser_palette_t *fossil_sanity_parser_create_palette(const char *name, const char *description) {
+    fossil_sanity_parser_palette_t *palette = malloc(sizeof(fossil_sanity_parser_palette_t));
     palette->name = _custom_strdup(name);
     palette->description = _custom_strdup(description);
     palette->commands = NULL;
     return palette;
 }
 
-// Add a command to the command palette
-void fossil_sanity_parser_add_command(fossil_sanity_parser_palette_t *palette, const char *command_name, const char *description) {
-    fossil_sanity_parser_command_t *command = fossil_sanity_parser_create_command(command_name, description);
-    
-    if (!palette->commands) {
-        palette->commands = command;
-    } else {
-        fossil_sanity_parser_command_t *last = palette->commands;
-        while (last->next) {
-            last = last->next;
-        }
-        last->next = command;
-        command->prev = last;
+fossil_sanity_parser_command_t *fossil_sanity_parser_add_command(fossil_sanity_parser_palette_t *palette, const char *command_name, const char *description) {
+    fossil_sanity_parser_command_t *command = malloc(sizeof(fossil_sanity_parser_command_t));
+    command->name = _custom_strdup(command_name);
+    command->description = _custom_strdup(description);
+    command->arguments = NULL;
+    command->prev = NULL;
+    command->next = palette->commands;
+    if (palette->commands) {
+        palette->commands->prev = command;
     }
+    palette->commands = command;
+    return command;
 }
 
-// Add an argument to a command
-void fossil_sanity_parser_add_argument(fossil_sanity_parser_command_t *command, const char *arg_name, fossil_sanity_parser_arg_type_t arg_type) {
-    fossil_sanity_parser_argument_t *arg = fossil_sanity_parser_create_argument(arg_name, arg_type);
-    
-    if (!command->arguments) {
-        command->arguments = arg;
-    } else {
-        fossil_sanity_parser_argument_t *last = command->arguments;
-        while (last->next) {
-            last = last->next;
-        }
-        last->next = arg;
-    }
+fossil_sanity_parser_argument_t *fossil_sanity_parser_add_argument(fossil_sanity_parser_command_t *command, const char *arg_name, fossil_sanity_parser_arg_type_t arg_type, char **combo_options, int combo_count) {
+    fossil_sanity_parser_argument_t *argument = malloc(sizeof(fossil_sanity_parser_argument_t));
+    argument->name = _custom_strdup(arg_name);
+    argument->type = arg_type;
+    argument->value = NULL;
+    argument->combo_options = combo_options;
+    argument->combo_count = combo_count;
+    argument->next = command->arguments;
+    command->arguments = argument;
+    return argument;
 }
 
-// Parse the arguments from the command line input
 void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int argc, char **argv) {
-    for (int i = 1; i < argc; i++) {
-        bool found_command = false;
-        fossil_sanity_parser_command_t *command = palette->commands;
+    if (argc < 2) {
+        fprintf(stderr, "No command provided.\n");
+        return;
+    }
 
-        while (command) {
-            if (strcmp(argv[i], command->name) == 0) {
-                printf("Executing command: %s\n", command->name);
-                found_command = true;
-                fossil_sanity_parser_argument_t *arg = command->arguments;
+    const char *command_name = argv[1];
+    fossil_sanity_parser_command_t *command = palette->commands;
+    while (command) {
+        if (strcmp(command->name, command_name) == 0) {
+            break;
+        }
+        command = command->next;
+    }
 
-                for (int j = i + 1; j < argc && arg; j++, arg = arg->next) {
-                    if (arg->type == FOSSIL_SANITY_PARSER_BOOL) {
-                        if (strcmp(argv[j], "enable") == 0) {
-                            arg->value = (void*)1; // Set to true
-                        } else if (strcmp(argv[j], "disable") == 0) {
-                            arg->value = (void*)0; // Set to false
+    if (!command) {
+        // Unknown command; suggest a similar one
+        const char *suggestion = suggest_command(command_name, palette);
+        if (suggestion) {
+            fprintf(stderr, "Unknown command: '%s'. Did you mean '%s'?\n", command_name, suggestion);
+        } else {
+            fprintf(stderr, "Unknown command: '%s'. Type 'help' to see available commands.\n", command_name);
+        }
+        return;
+    }
+
+    // Process command arguments
+    for (int i = 2; i < argc; i++) {
+        const char *arg_value = argv[i];
+        fossil_sanity_parser_argument_t *argument = command->arguments;
+        while (argument) {
+            if (strcmp(argument->name, arg_value) == 0) {
+                switch (argument->type) {
+                    case FOSSIL_SANITY_PARSER_BOOL:
+                        argument->value = malloc(sizeof(int));
+                        if (strcmp(arg_value, "enable") == 0) {
+                            *(int *)argument->value = 1; // Enable
+                        } else if (strcmp(arg_value, "disable") == 0) {
+                            *(int *)argument->value = 0; // Disable
+                        } else {
+                            fprintf(stderr, "Invalid value for boolean argument: %s\n", arg_value);
+                            free(argument->value);
+                            argument->value = NULL;
                         }
-                    } else if (arg->type == FOSSIL_SANITY_PARSER_STRING) {
-                        arg->value = _custom_strdup(argv[j]);
-                    } else if (arg->type == FOSSIL_SANITY_PARSER_INT) {
-                        long int val = strtol(argv[j], NULL, 10);
-                        arg->value = (void*)(intptr_t)val; // Cast to intptr_t before casting to void*
-                    }
+                        break;
+                    case FOSSIL_SANITY_PARSER_STRING:
+                        argument->value = strdup(arg_value); // Custom strdup
+                        break;
+                    case FOSSIL_SANITY_PARSER_INT:
+                        argument->value = malloc(sizeof(int));
+                        *(int *)argument->value = atoi(arg_value);
+                        break;
+                    case FOSSIL_SANITY_PARSER_COMBO:
+                        for (int j = 0; j < argument->combo_count; j++) {
+                            if (strcmp(arg_value, argument->combo_options[j]) == 0) {
+                                argument->value = strdup(arg_value);
+                                break;
+                            }
+                        }
+                        break;
                 }
                 break;
             }
-            command = command->next;
-        }
-        if (!found_command) {
-            printf("Unknown command: %s\n", argv[i]);
+            argument = argument->next;
         }
     }
 }
 
-// Free memory allocated for the command palette and all its commands and arguments
 void fossil_sanity_parser_free(fossil_sanity_parser_palette_t *palette) {
-    if (!palette) return;
-
     fossil_sanity_parser_command_t *command = palette->commands;
     while (command) {
-        fossil_sanity_parser_argument_t *arg = command->arguments;
-        while (arg) {
-            free(arg->name);
-            if (arg->value && arg->type == FOSSIL_SANITY_PARSER_STRING) {
-                free(arg->value);
+        fossil_sanity_parser_argument_t *argument = command->arguments;
+        while (argument) {
+            if (argument->type == FOSSIL_SANITY_PARSER_COMBO) {
+                free(argument->combo_options);
             }
-            fossil_sanity_parser_argument_t *temp = arg;
-            arg = arg->next;
-            free(temp);
+            free(argument->name);
+            free(argument->value);
+            argument = argument->next;
         }
         free(command->name);
         free(command->description);
-        fossil_sanity_parser_command_t *temp = command;
         command = command->next;
-        free(temp);
     }
     free(palette->name);
     free(palette->description);
