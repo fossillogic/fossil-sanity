@@ -44,56 +44,67 @@ FOSSIL_TEARDOWN(c_parser_suite) {
 // as samples for library usage.
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
-FOSSIL_TEST_CASE(c_parser_create_palette) {
-    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
-    FOSSIL_TEST_ASSUME(palette != NULL, "Palette should be created successfully");
+FOSSIL_TEST_CASE(c_create_palette) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test Description");
+    FOSSIL_TEST_ASSUME(palette != NULL, "Palette should be created");
+    FOSSIL_TEST_ASSUME(strcmp(palette->name, "test_palette") == 0, "Palette name should be 'test_palette'");
+    FOSSIL_TEST_ASSUME(strcmp(palette->description, "Test Description") == 0, "Palette description should be 'Test Description'");
+    FOSSIL_TEST_ASSUME(palette->commands == NULL, "Palette commands should be NULL");
     fossil_sanity_parser_free(palette);
-}
+} // end case
 
-FOSSIL_TEST_CASE(c_parser_add_command) {
-    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
-    fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
-    // Assuming there's a way to verify the command was added, e.g., by checking the palette's internal state
+FOSSIL_TEST_CASE(c_add_command) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test Description");
+    fossil_sanity_parser_command_t *command = fossil_sanity_parser_add_command(palette, "test_command", "Test Command Description");
+    FOSSIL_TEST_ASSUME(command != NULL, "Command should be added");
+    FOSSIL_TEST_ASSUME(strcmp(command->name, "test_command") == 0, "Command name should be 'test_command'");
+    FOSSIL_TEST_ASSUME(strcmp(command->description, "Test Command Description") == 0, "Command description should be 'Test Command Description'");
+    FOSSIL_TEST_ASSUME(command->arguments == NULL, "Command arguments should be NULL");
+    FOSSIL_TEST_ASSUME(palette->commands == command, "Palette commands should include the new command");
     fossil_sanity_parser_free(palette);
-}
+} // end case
 
-FOSSIL_TEST_CASE(c_parser_add_argument) {
-    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
-    fossil_sanity_parser_command_t *command = NULL;
-    fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
-    fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
-    // Assuming there's a way to verify the argument was added, e.g., by checking the command's internal state
+FOSSIL_TEST_CASE(c_add_argument) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test Description");
+    fossil_sanity_parser_command_t *command = fossil_sanity_parser_add_command(palette, "test_command", "Test Command Description");
+    fossil_sanity_parser_argument_t *argument = fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING, NULL, 0);
+    FOSSIL_TEST_ASSUME(argument != NULL, "Argument should be added");
+    FOSSIL_TEST_ASSUME(strcmp(argument->name, "test_arg") == 0, "Argument name should be 'test_arg'");
+    FOSSIL_TEST_ASSUME(argument->type == FOSSIL_SANITY_PARSER_STRING, "Argument type should be STRING");
+    FOSSIL_TEST_ASSUME(argument->value == NULL, "Argument value should be NULL");
+    FOSSIL_TEST_ASSUME(command->arguments == argument, "Command arguments should include the new argument");
     fossil_sanity_parser_free(palette);
-}
+} // end case
 
-FOSSIL_TEST_CASE(c_parser_parse_with_palette) {
-    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
-    fossil_sanity_parser_command_t *command = NULL;
-    fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
-    fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
+FOSSIL_TEST_CASE(c_parse_command) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test Description");
+    fossil_sanity_parser_command_t *command = fossil_sanity_parser_add_command(palette, "test_command", "Test Command Description");
+    fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING, NULL, 0);
 
-    char *argv[] = {"program", "test_command", "test_arg_value"};
-    int argc = sizeof(argv) / sizeof(argv[0]);
-    fossil_sanity_parser_parse(palette, argc, argv);
-    // Assuming there's a way to verify the parsing result, e.g., by checking the command's internal state
+    char *argv[] = {"program", "test_command", "test_arg", "test_value"};
+    fossil_sanity_parser_parse(palette, 4, argv);
+
+    FOSSIL_TEST_ASSUME(command->arguments->value != NULL, "Argument value should be set");
     fossil_sanity_parser_free(palette);
-}
+} // end case
 
-FOSSIL_TEST_CASE(c_parser_free_palette) {
-    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
+FOSSIL_TEST_CASE(c_free_palette) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test Description");
+    ASSUME_NOT_CNULL(palette);
+    fossil_sanity_parser_add_command(palette, "test_command", "Test Command Description");
     fossil_sanity_parser_free(palette);
-    // Assuming there's a way to verify the palette was freed, e.g., by checking for memory leaks
-}
+    // No explicit assumptions here, just ensuring no memory leaks or crashes
+} // end case
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
 // * Fossil Logic Test Pool
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(c_parser_test_cases) {
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_create_palette);
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_add_command);
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_add_argument);
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_parse_with_palette);
-    FOSSIL_TEST_ADD(c_parser_suite, c_parser_free_palette);
+    FOSSIL_TEST_ADD(c_parser_suite, c_create_palette);
+    FOSSIL_TEST_ADD(c_parser_suite, c_add_command);
+    FOSSIL_TEST_ADD(c_parser_suite, c_add_argument);
+    FOSSIL_TEST_ADD(c_parser_suite, c_parse_command);
+    FOSSIL_TEST_ADD(c_parser_suite, c_free_palette);
 
     FOSSIL_TEST_REGISTER(c_parser_suite);
 } // end of group
