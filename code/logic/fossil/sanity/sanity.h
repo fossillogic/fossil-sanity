@@ -11,132 +11,151 @@
  * Copyright (C) 2024 Fossil Logic. All rights reserved.
  * -----------------------------------------------------------------------------
  */
-#ifndef FOSSIL_SANITY_CORE_H
-#define FOSSIL_SANITY_CORE_H
+#ifndef FOSSIL_SANITY_LOG_H
+#define FOSSIL_SANITY_LOG_H
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-#include <time.h>
+#include <string.h>
+
+// Log Levels (Priority-based)
+#define FOSSIL_SANITY_LOG_LEVEL_DEBUG    0
+#define FOSSIL_SANITY_LOG_LEVEL_INFO     1
+#define FOSSIL_SANITY_LOG_LEVEL_WARNING  2
+#define FOSSIL_SANITY_LOG_LEVEL_ERROR    3
+#define FOSSIL_SANITY_LOG_LEVEL_FATAL    4
+
+// Severity Levels
+#define FOSSIL_SANITY_LOG_SEVERITY_LOW    0
+#define FOSSIL_SANITY_LOG_SEVERITY_MEDIUM 1
+#define FOSSIL_SANITY_LOG_SEVERITY_HIGH   2
+
+// Max length for log message
+#define MAX_LOG_MESSAGE_LENGTH 256
+#define MAX_LOG_FILE_SIZE      1024 * 1024  // 1 MB for log file size
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum {
-    FOSSIL_SANITY_TRUE = true,
-    FOSSIL_SANITY_FALSE = false
-};
+// Log entry structure
+typedef struct fossil_sanity_log_entry {
+    int priority;                // Log level priority
+    int severity;                // Severity level of the log
+    char message[MAX_LOG_MESSAGE_LENGTH];  // Log message
+    struct fossil_sanity_log_entry *prev;
+    struct fossil_sanity_log_entry *next;
+} fossil_sanity_log_entry_t;
+
+// Double-ended priority queue (DEPQ)
+typedef struct fossil_sanity_log_queue {
+    fossil_sanity_log_entry_t *head;
+    fossil_sanity_log_entry_t *tail;
+} fossil_sanity_log_queue_t;
+
+// Log rotation state
+typedef struct fossil_sanity_log_rotation {
+    char log_file_path[MAX_LOG_MESSAGE_LENGTH]; // Log file path for rotation
+    size_t current_size;   // Current size of the log file
+} fossil_sanity_log_rotation_t;
 
 /**
- * @enum fossil_sanity_log_level
- * @brief Enumeration of log levels.
- */
-typedef enum {
-    FOSSIL_SANITY_LOG_PROD,      /**< Production log level */
-    FOSSIL_SANITY_LOG_WARN,      /**< Warning log level */
-    FOSSIL_SANITY_LOG_ERROR,     /**< Error log level */
-    FOSSIL_SANITY_LOG_CRITICAL,  /**< Critical log level */
-    FOSSIL_SANITY_LOG_DEBUG      /**< Debug log level */
-} fossil_sanity_log_level;
-
-/**
- * @struct fossil_sanity_config
- * @brief Configuration structure for the Fossil Sanity library.
- */
-typedef struct {
-    bool debug_enabled;    /**< Enable/disable debug mode */
-    bool logs_enabled;     /**< Enable/disable logging */
-    fossil_sanity_log_level log_level;   /**< Log level */
-    FILE *log_output;                    /**< Output file for logs */
-    bool use_colors;       /**< Enable/disable colors in logs */
-} fossil_sanity_config;
-
-/**
- * @brief Initialize the configuration structure with default values.
+ * @brief Initialize the log queue.
  *
- * @param config Pointer to the configuration structure to initialize.
+ * @param queue Pointer to the log queue to initialize.
  */
-void fossil_sanity_init_config(fossil_sanity_config *config);
+void fossil_sanity_log_init(fossil_sanity_log_queue_t *queue);
 
 /**
- * @brief Parse command-line arguments to configure the library.
+ * @brief Push a log message onto the queue.
  *
- * @param argc Argument count.
- * @param argv Argument vector.
- * @param config Pointer to the configuration structure to populate.
+ * @param queue Pointer to the log queue.
+ * @param message The log message to push.
+ * @param priority The priority of the log message.
+ * @param severity The severity of the log message.
  */
-void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *config);
+void fossil_sanity_log_push(fossil_sanity_log_queue_t *queue, const char *message, int priority, int severity);
 
 /**
- * @brief Summary of the configuration settings.
- * 
- * @param config Pointer to the configuration structure.
- */
-void fossil_sanity_summary(const fossil_sanity_config *config);
-
-/**
- * @brief Log a message with the specified log level.
+ * @brief Pop a log message from the queue.
  *
- * @param config Pointer to the configuration structure.
- * @param level Log level of the message.
- * @param message Format string for the log message.
- * @param ... Additional arguments for the format string.
+ * @param queue Pointer to the log queue.
+ * @return The popped log message.
  */
-void fossil_sanity_log(const fossil_sanity_config *config, fossil_sanity_log_level level, const char *message, ...);
+char *fossil_sanity_log_pop(fossil_sanity_log_queue_t *queue);
 
 /**
- * @brief Get a response message based on the log level.
+ * @brief Print all log messages in the queue.
  *
- * @param level Log level.
- * @return Response message.
+ * @param queue Pointer to the log queue.
  */
-const char *fossil_sanity_get_response(fossil_sanity_log_level level);
+void fossil_sanity_log_print(fossil_sanity_log_queue_t *queue);
 
 /**
- * @brief Validate if the input string is a valid integer.
+ * @brief Clear all log messages from the queue.
  *
- * @param input Input string to validate.
- * @return Boolean indicating if the input is a valid integer.
+ * @param queue Pointer to the log queue.
  */
-bool fossil_sanity_validate_integer(const char *input);
+void fossil_sanity_log_clear(fossil_sanity_log_queue_t *queue);
 
 /**
- * @brief Validate if the input string contains only allowed characters.
+ * @brief Sort the log messages in the queue.
  *
- * @param input Input string to validate.
- * @param allowed_chars String of allowed characters.
- * @return Boolean indicating if the input is valid.
+ * @param queue Pointer to the log queue.
  */
-bool fossil_sanity_validate_string(const char *input, const char *allowed_chars);
+void fossil_sanity_log_sort(fossil_sanity_log_queue_t *queue);
 
 /**
- * @brief Get the color code for the specified log level.
+ * @brief Filter log messages in the queue by minimum priority.
  *
- * @param level Log level.
- * @return Color code string.
+ * @param queue Pointer to the log queue.
+ * @param min_priority The minimum priority to filter by.
  */
-const char *fossil_sanity_get_color_code(fossil_sanity_log_level level);
+void fossil_sanity_log_filter(fossil_sanity_log_queue_t *queue, int min_priority);
 
 /**
- * @brief Check the clarity of a message.
+ * @brief Search for a log message in the queue by keyword.
  *
- * @param message Message to check.
- * @return Boolean indicating if the message is clear.
+ * @param queue Pointer to the log queue.
+ * @param keyword The keyword to search for.
+ * @return The found log message.
  */
-bool fossil_sanity_check_message_clarity(const char *message);
+char *fossil_sanity_log_search(fossil_sanity_log_queue_t *queue, const char *keyword);
 
 /**
- * @brief Check the grammar of a message.
+ * @brief Rotate the log files based on the rotation policy.
  *
- * @param message Message to check.
- * @return Boolean indicating if the message has correct grammar.
+ * @param rotation Pointer to the log rotation policy.
  */
-bool fossil_sanity_check_grammar(const char *message);
+void fossil_sanity_log_rotate(fossil_sanity_log_rotation_t *rotation);
+
+/**
+ * @brief Send a notification with the given message.
+ *
+ * @param message The message to notify.
+ */
+void fossil_sanity_log_notify(const char *message);
+
+/**
+ * @brief Log a message using the smart log system.
+ *
+ * @param queue Pointer to the log queue.
+ * @param level The log level.
+ * @param severity The severity of the log message.
+ * @param message The log message.
+ */
+void fossil_sanity_log_smart_log(fossil_sanity_log_queue_t *queue, int level, int severity, const char *message);
+
+/**
+ * @brief Enable or disable the smart log format.
+ *
+ * @param enable Boolean flag to enable or disable the smart log format.
+ */
+void fossil_sanity_log_set_smart_format(bool enable);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // FOSSIL_SANITY_CORE_H
+#endif // FOSSIL_SANITY_LOG_H

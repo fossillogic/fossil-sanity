@@ -12,547 +12,234 @@
  * -----------------------------------------------------------------------------
  */
 #include "fossil/sanity/sanity.h"
-#include <stdarg.h>
-#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-// Dynamic responses for each log level (30 responses per category)
-static const char *fossil_sanity_responses[][30] = {
-    // PROD responses
-    {
-        "Operation completed successfully.",
-        "All tasks finished without any issues.",
-        "Process completed with no errors.",
-        "Everything is running smoothly.",
-        "No problems encountered during execution.",
-        "Task completed as expected.",
-        "Success: All actions are validated.",
-        "Execution was flawless.",
-        "No errors were found.",
-        "Everything is fine, no issues detected.",
-        "The operation was successful without any issues.",
-        "The system is working as intended.",
-        "The process finished successfully with no hitches.",
-        "The task was completed without any failure.",
-        "Success: No errors were encountered.",
-        "The system is running efficiently.",
-        "Operation successful: No problems found.",
-        "The result is satisfactory.",
-        "The task was completed in a timely manner.",
-        "No errors or problems during execution.",
-        "The operation has been verified as correct.",
-        "The action was performed successfully.",
-        "System performance is stable.",
-        "Everything completed without any interruptions.",
-        "All tests passed successfully.",
-        "Success: Operation finished cleanly.",
-        "Everything is working perfectly.",
-        "The result is as expected.",
-        "Task completed with no significant issues."
-    },
-
-    // WARN responses
-    {
-        "Warning: Potential issue detected.",
-        "Caution: Something might need attention.",
-        "Notice: Minor irregularity observed.",
-        "Warning: The operation might not be fully optimal.",
-        "Alert: This action might cause unexpected results.",
-        "Minor issue detected, but proceeding.",
-        "Warning: Unusual behavior observed.",
-        "Alert: Consider reviewing the output.",
-        "Notice: There's a slight anomaly in the process.",
-        "Warning: Something seems off, proceed with caution.",
-        "Warning: This might affect performance, check details.",
-        "Heads up: A small issue was found.",
-        "Notice: Not critical, but worth considering.",
-        "Warning: The result could be improved.",
-        "Alert: This operation might need additional checks.",
-        "Notice: Potential improvement found in the process.",
-        "Warning: A minor issue could impact future results.",
-        "Heads up: You might want to adjust some settings.",
-        "Notice: A potential issue was noted during the process.",
-        "Warning: This task may need re-evaluation.",
-        "Alert: It’s suggested to verify the settings.",
-        "Notice: There could be an issue with the configuration.",
-        "Warning: Some settings may not be optimal.",
-        "Heads up: Verify configuration to prevent problems.",
-        "Warning: The task executed, but with minor issues.",
-        "Notice: Check the configuration for possible improvements.",
-        "Alert: Results are as expected, but some variance exists.",
-        "Warning: Proceeding with minor concerns."
-    },
-
-    // ERROR responses
-    {
-        "Error: The operation failed unexpectedly.",
-        "Critical error encountered during execution.",
-        "Error: The task could not be completed.",
-        "An error occurred, halting the process.",
-        "Operation failed: Unable to proceed.",
-        "Error: Invalid configuration detected.",
-        "The process failed to complete successfully.",
-        "System error: Action could not be executed.",
-        "Error: Unexpected failure encountered.",
-        "An error has interrupted the operation.",
-        "Process aborted due to an error.",
-        "Critical error: Immediate attention needed.",
-        "Error: Unexpected result, operation aborted.",
-        "Failure detected, unable to proceed.",
-        "Error: Problem encountered while processing.",
-        "Error: Action could not be completed.",
-        "System failure: Unable to continue.",
-        "Error: Unable to proceed with the given input.",
-        "Critical failure: Immediate action required.",
-        "Error: Task completion was unsuccessful.",
-        "Operation failed: Unexpected error occurred.",
-        "Error: Configuration mismatch detected.",
-        "Critical error: Intervention required immediately.",
-        "Error: Execution was halted due to failure.",
-        "Process terminated due to error.",
-        "Error: Unable to process the requested action.",
-        "Error: An issue has prevented completion.",
-        "System error: Please check logs for more details.",
-        "Error: Operation could not be finished."
-    },
-
-    // CRITICAL responses
-    {
-        "Critical: System failure, immediate action required.",
-        "Critical issue: Immediate intervention needed.",
-        "Critical failure: The system is not responsive.",
-        "System-wide failure: Immediate attention is required.",
-        "Critical issue encountered: Action must be taken immediately.",
-        "Major failure detected: The system is unstable.",
-        "Critical error: System is at risk of crashing.",
-        "Critical system failure: Action required immediately.",
-        "Immediate action required: Critical issue detected.",
-        "System-wide shutdown required: Critical issue found.",
-        "Critical failure: All operations halted.",
-        "Critical failure detected: System instability.",
-        "Immediate action required: The system is compromised.",
-        "Critical error: The process is not recoverable.",
-        "System failure: No further actions possible.",
-        "Critical issue: The process has failed completely.",
-        "Critical: Urgent fix needed to avoid downtime.",
-        "Critical: Severe instability detected.",
-        "Failure: The system is unable to recover.",
-        "System failure: Data may be compromised.",
-        "Immediate shutdown: The system cannot continue.",
-        "Critical failure: Restart the system to continue.",
-        "System failure: Essential services are down.",
-        "Critical: Unable to continue operation.",
-        "Critical error: Major system fault detected.",
-        "System compromised: Immediate fix needed.",
-        "Critical failure: Unable to recover the system.",
-        "System down: Critical failure in progress.",
-        "Critical: Please escalate to a senior technician."
-    },
-
-    // DEBUG responses
-    {
-        "Debug: Internal status check successful.",
-        "Debug: Verbose output shows no anomalies.",
-        "Debug: All debug checks have completed successfully.",
-        "Debug: Internal log shows normal operation.",
-        "Debug: Debug mode active, no issues detected.",
-        "Debug: Verbose logging enabled for analysis.",
-        "Debug: All test cases passed successfully.",
-        "Debug: Output matched expected results.",
-        "Debug: Verbose mode reveals no significant errors.",
-        "Debug: No errors found in debug mode.",
-        "Debug: Internal check passed without errors.",
-        "Debug: Debug output shows expected results.",
-        "Debug: Diagnostics show no operational issues.",
-        "Debug: Verbose log confirms expected behavior.",
-        "Debug: All internal checks return normal values.",
-        "Debug: Debugging process completed without issues.",
-        "Debug: The system is functioning as expected.",
-        "Debug: No discrepancies found in debug mode.",
-        "Debug: No debug-level issues were encountered.",
-        "Debug: Diagnostic checks completed successfully.",
-        "Debug: Verbose log confirms correct configuration.",
-        "Debug: Output matches expected debug-level details.",
-        "Debug: Internal status matches anticipated values.",
-        "Debug: Debugging completed without incident.",
-        "Debug: Verbose logging shows all systems running smoothly.",
-        "Debug: Internal test passed with no errors.",
-        "Debug: No issues detected during debug execution.",
-        "Debug: Debugging confirmed all components are functional.",
-        "Debug: Output verification complete, no issues found."
-    }
-};
-
-const char *ARTICLES[] = {
-    "a", "an", "the"
-};
-
-const char *NOUNS[] = {
-    "message", "example", "sentence", "structure", "clarity", "grammar", "system", "operation", "task", "process",
-    "result", "issue", "error", "failure", "problem", "configuration", "output", "input", "log", "level", "response",
-    "action", "attention", "behavior", "check", "details", "execution", "intervention", "performance", "settings",
-    "shutdown", "stability", "status", "verification"
-};
-
-const char *VERBS[] = {
-    "is", "are", "was", "were", "be", "being", "been", "has", "have", "does", "do", "completed",
-    "detected", "encountered", "executed", "failed", "found", "halted", "interrupted", "logged", "matched", "observed",
-    "passed", "performed", "proceeded", "processed", "recovered", "required", "returned", "running", "showed", "terminated",
-    "validated", "verified"
-};
-
-const char *PREPOSITIONS[] = {
-    "in", "on", "at", "since", "for", "ago", "before", "to", "past", "by", "about", "under", "over", "with", "without", "between", "among"
-};
-
-const char *ADJECTIVES[] = {
-    "clear", "good", "writing", "valid", "understandable", "correct", "incorrect", "poor", "vague", "long", "short",
-    "unusual", "minor", "critical", "unexpected", "invalid", "unrecoverable", "unstable", "severe", "major", "immediate",
-    "system-wide", "internal", "verbose", "normal", "expected", "successful", "flawless", "timely", "optimal", "unresponsive",
-    "unrecoverable", "compromised", "unrecoverable", "essential", "severe", "major", "senior"
-};
-
-const char *ROTBRAIN[] = {
-    "rizz", "skibidi", "yeet", "sus", "vibe", "lit", "no cap", "bet", "fam", "bruh",
-    "flex", "ghost", "goat", "gucci", "hype", "janky", "lowkey", "mood", "salty", "shade",
-    "slay", "snatched", "stan", "tea", "thirsty", "woke", "yolo", "zaddy", "drip", "fire"
-};
-
-// List of offensive words and phrases (super hard to mainting thisw list as GitHub Copilot doesnt wanna help with this part of the SOAP API)
-static const char *OFFENSIVE[] = {
-    "curse1",
-    "curse2",
-    "racist_phrase1",
-    "racist_phrase2", // for demo and unit testing we keep these four keywords
-
-    // English offensive words and phrases
-    "2g1c", "2 girls 1 cup", "acrotomophilia", "alabama hot pocket", "alaskan pipeline", "anal", "anilingus", "anus", "apeshit", "arsehole", "ass", "asshole", "assmunch", "auto erotic", "autoerotic", "babeland",
-    "baby batter", "baby juice", "ball gag", "ball gravy", "ball kicking", "ball licking", "ball sack", "ball sucking", "bangbros", "bareback", "barely legal", "barenaked", "bastard", "bastardo", "bastinado", "bbw",
-    "bdsm", "beaner", "beaners", "beaver cleaver", "beaver lips", "bestiality", "big black", "big breasts", "big knockers", "big tits", "bimbos", "birdlock", "bitch", "bitches", "black cock", "blonde action", "blonde on blonde action",
-    "blowjob", "blow job", "blow your load", "blue waffle", "blumpkin", "bollocks", "bondage", "boner", "boob", "boobs", "booty call", "brown showers", "brunette action", "bukkake", "bulldyke", "bullet vibe", "bullshit",
-    "bung hole", "bunghole", "busty", "butt", "buttcheeks", "butthole", "camel toe", "camgirl", "camslut", "camwhore", "carpet muncher", "carpetmuncher", "chocolate rosebuds", "circlejerk", "cleveland steamer", "clit",
-    "clitoris", "clover clamps", "clusterfuck", "cock", "cocks", "coprolagnia", "coprophilia", "cornhole", "coon", "coons", "creampie", "cum", "cumming", "cunnilingus", "cunt", "darkie", "date rape", "daterape",
-    "deep throat", "deepthroat", "dendrophilia", "dick", "dildo", "dingleberry", "dingleberries", "dirty pillows", "dirty sanchez", "doggie style", "doggiestyle", "doggy style", "doggystyle", "dog style", "dolcett",
-    "domination", "dominatrix", "dommes", "donkey punch", "double dong", "double penetration", "dp action", "dry hump", "dvda", "eat my ass", "ecchi", "ejaculation", "erotic", "erotism", "escort", "eunuch", "faggot",
-    "fecal", "felch", "fellatio", "feltch", "female squirting", "femdom", "figging", "fingerbang", "fingering", "fisting", "foot fetish", "footjob", "frotting", "fuck", "fuck buttons", "fuckin", "fucking", "fucktards",
-    "fudge packer", "fudgepacker", "futanari", "gang bang", "gay sex", "genitals", "giant cock", "girl on", "girl on top", "girls gone wild", "goatcx", "goatse", "god damn", "gokkun", "golden shower", "goodpoop",
-    "goo girl", "goregasm", "grope", "group sex", "g-spot", "guro", "hand job", "handjob", "hard core", "hardcore", "hentai", "homoerotic", "honkey", "hooker", "hot carl", "hot chick", "how to kill", "how to murder",
-    "huge fat", "humping", "incest", "intercourse", "jack off", "jail bait", "jailbait", "jelly donut", "jerk off", "jigaboo", "jiggaboo", "jiggerboo", "jizz", "juggs", "kike", "kinbaku", "kinkster", "kinky", "knobbing",
-    "leather restraint", "leather straight jacket", "lemon party", "lolita", "lovemaking", "make me come", "male squirting", "masturbate", "menage a trois", "milf", "missionary position", "motherfucker", "mound of venus",
-    "mr hands", "muff diver", "muffdiving", "nambla", "nawashi", "negro", "neonazi", "nigga", "nigger", "nig nog", "nimphomania", "nipple", "nipples", "nsfw images", "nude", "nudity", "nympho", "nymphomania", "octopussy",
-    "omorashi", "one cup two girls", "one guy one jar", "orgasm", "orgy", "paedophile", "paki", "panties", "panty", "pedobear", "pedophile", "pegging", "penis", "phone sex", "piece of shit", "pissing", "piss pig", "pisspig",
-    "playboy", "pleasure chest", "pole smoker", "ponyplay", "poof", "poon", "poontang", "punany", "poop chute", "poopchute", "porn", "porno", "pornography", "prince albert piercing", "pthc", "pubes", "pussy", "queaf", "queef",
-    "quim", "raghead", "raging boner", "rape", "raping", "rapist", "rectum", "reverse cowgirl", "rimjob", "rimming", "rosy palm", "rosy palm and her 5 sisters", "rusty trombone", "sadism", "santorum", "scat", "schlong",
-    "scissoring", "semen", "sex", "sexo", "sexy", "shaved beaver", "shaved pussy", "shemale", "shibari", "shit", "shitblimp", "shitty", "shota", "shrimping", "skeet", "slanteye", "slut", "s&m", "smut", "snatch", "snowballing",
-    "sodomize", "sodomy", "spic", "splooge", "splooge moose", "spooge", "spread legs", "spunk", "strap on", "strapon", "strappado", "strip club", "style doggy", "suck", "sucks", "suicide girls", "sultry women", "swastika",
-    "swinger", "tainted love", "taste my", "tea bagging", "threesome", "throating", "tied up", "tight white", "tit", "tits", "titties", "titty", "tongue in a", "topless", "tosser", "towelhead", "tranny", "tribadism",
-    "tub girl", "tubgirl", "tushy", "twat", "twink", "twinkie", "two girls one cup", "undressing", "upskirt", "urethra play", "urophilia", "vagina", "venus mound", "vibrator", "violet wand", "vorarephilia", "voyeur", "vulva",
-    "wank", "wetback", "wet dream", "white power", "wrapping men", "wrinkled starfish", "xx", "xxx", "yaoi", "yellow showers", "yiffy", "zoophilia"
-
-    // Support for other languages can be added via PR to this repository
-};
-
-char *custom_strdup(const char *str) {
+char *_custom_strdup(const char *str) {
     if (!str) return NULL;
-    size_t len = strlen(str) + 1;
-    char *new_str = malloc(len);
-    if (new_str) {
-        memcpy(new_str, str, len);
-    }
-    return new_str;
+    size_t len = strlen(str);
+    char *copy = (char *)malloc(len + 1);
+    if (!copy) return NULL;
+    strcpy(copy, str);
+    return copy;
 }
 
-int custom_strcasecmp(const char *s1, const char *s2) {
-    while (*s1 && *s2) {
-        char c1 = (unsigned char)tolower((unsigned char)*s1);
-        char c2 = (unsigned char)tolower((unsigned char)*s2);
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-        s1++;
-        s2++;
-    }
-    return (unsigned char)tolower((unsigned char)*s1) - (unsigned char)tolower((unsigned char)*s2);
+// Static variable to hold the smart log format setting
+static bool smart_log_format = false;
+
+// Initialize the log queue
+void fossil_sanity_log_init(fossil_sanity_log_queue_t *queue) {
+    queue->head = NULL;
+    queue->tail = NULL;
 }
 
-bool is_in_array(const char *word, const char *array[], size_t array_size) {
-    for (size_t i = 0; i < array_size; i++) {
-        if (custom_strcasecmp(word, array[i]) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void show_usage(void) {
-    printf("Usage: program [options]\n");
-    printf("Options:\n");
-    printf("  --debug          Enable debug mode\n");
-    printf("  --no-debug       Disable debug mode\n");
-    printf("  --logs           Enable logging\n");
-    printf("  --no-logs        Disable logging\n");
-    printf("  --colors         Enable colored output\n");
-    printf("  --no-colors      Disable colored output\n");
-    printf("  --show-prod      Set log level to PROD\n");
-    printf("  --show-warn      Set log level to WARN\n");
-    printf("  --show-error     Set log level to ERROR\n");
-    printf("  --show-critical  Set log level to CRITICAL\n");
-    printf("  --show-debug     Set log level to DEBUG\n");
-    printf("  --help           Display this help message\n");
-    printf("  --version        Display the program version\n");
-}
-
-// Get a random response based on the log level
-const char *fossil_sanity_get_response(fossil_sanity_log_level level) {
-    srand((unsigned int)time(NULL));
-    int index = rand() % 30;  // Get a random response from the list (0-29)
-    return fossil_sanity_responses[level][index];
-}
-
-// Color codes for each log level
-static const char *fossil_sanity_color_codes[] = {
-    "\033[1;32m", // Green: PROD
-    "\033[1;33m", // Yellow: WARN
-    "\033[1;31m", // Red: ERROR
-    "\033[1;35m", // Magenta: CRITICAL
-    "\033[1;36m"  // Cyan: DEBUG
-};
-
-// Reset color
-#define COLOR_RESET "\033[0m"
-
-// ============================================================================
-// Fossil Sanity ini logic
-// ============================================================================
-
-// Initialize configuration
-void fossil_sanity_init_config(fossil_sanity_config *config) {
-    if (!config) {
+// Push a log entry into the queue based on priority and severity
+void fossil_sanity_log_push(fossil_sanity_log_queue_t *queue, const char *message, int priority, int severity) {
+    fossil_sanity_log_entry_t *new_entry = (fossil_sanity_log_entry_t *)malloc(sizeof(fossil_sanity_log_entry_t));
+    if (!new_entry) {
+        perror("Failed to allocate memory for log entry");
         return;
     }
 
-    config->debug_enabled = false;
-    config->logs_enabled = true;
-    config->log_level = FOSSIL_SANITY_LOG_WARN;
-    config->log_output = NULL;
-    config->use_colors = true;
-}
+    new_entry->priority = priority;
+    new_entry->severity = severity;
+    strncpy(new_entry->message, message, MAX_LOG_MESSAGE_LENGTH - 1);
+    new_entry->message[MAX_LOG_MESSAGE_LENGTH - 1] = '\0';  // Ensure null-termination
 
-// ============================================================================
-// Core logging functionality
-// ============================================================================
+    new_entry->next = NULL;
+    new_entry->prev = NULL;
 
-// Get color code based on log level
-const char *fossil_sanity_get_color_code(fossil_sanity_log_level level) {
-    return fossil_sanity_color_codes[level];
-}
-
-// Log with filtering and colors
-void fossil_sanity_log(const fossil_sanity_config *config, fossil_sanity_log_level level, const char *message, ...) {
-    const char *level_str[] = {"PROD", "WARN", "ERROR", "CRITICAL", "DEBUG"};
-
-    if (!config->logs_enabled || level > config->log_level) {
-        return;
-    }
-
-    // Check if message is clear and grammatically correct
-    if (!fossil_sanity_check_message_clarity(message)) {
-        fprintf(stderr, "[ERROR] Message may confuse users: %s\n", message);
-        return;
-    }
-
-    if (!fossil_sanity_check_grammar(message)) {
-        fprintf(stderr, "[ERROR] Message contains grammatical issues: %s\n", message);
-        return;
-    }
-
-    // Get timestamp
-    time_t now = time(NULL);
-    struct tm *time_info = localtime(&now);
-    char time_str[20];
-    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
-
-    FILE *output = config->log_output ? config->log_output : stdout;
-
-    va_list args;
-    va_start(args, message);
-
-    if (config->use_colors) {
-        fprintf(output, "%s[%s] [%s] ", fossil_sanity_get_color_code(level), time_str, level_str[level]);
+    // Add the new log entry to the queue based on priority (Descending order)
+    if (!queue->head) {
+        queue->head = new_entry;
+        queue->tail = new_entry;
     } else {
-        fprintf(output, "[%s] [%s] ", time_str, level_str[level]);
-    }
-
-    vfprintf(output, message, args);
-    fprintf(output, "%s\n", config->use_colors ? COLOR_RESET : "");
-    va_end(args);
-}
-
-// ============================================================================
-// Configuration loading
-// ============================================================================
-
-void fossil_sanity_parse_args(int argc, char *argv[], fossil_sanity_config *config) {
-    for (int i = 1; i < argc; ++i) {
-        char *arg = argv[i];
-
-        // Handle each argument as a flag or option
-        if (strcmp(arg, "--debug") == 0) {
-            config->debug_enabled = true;
-        } else if (strcmp(arg, "--no-debug") == 0) {
-            config->debug_enabled = false;
-        } else if (strcmp(arg, "--logs") == 0) {
-            config->logs_enabled = true;
-        } else if (strcmp(arg, "--no-logs") == 0) {
-            config->logs_enabled = false;
-        } else if (strcmp(arg, "--colors") == 0) {
-            config->use_colors = true;
-        } else if (strcmp(arg, "--no-colors") == 0) {
-            config->use_colors = false;
-        } else if (strcmp(arg, "--show-prod") == 0) {
-            config->log_level = FOSSIL_SANITY_LOG_PROD;
-        } else if (strcmp(arg, "--show-warn") == 0) {
-            config->log_level = FOSSIL_SANITY_LOG_WARN;
-        } else if (strcmp(arg, "--show-error") == 0) {
-            config->log_level = FOSSIL_SANITY_LOG_ERROR;
-        } else if (strcmp(arg, "--show-critical") == 0) {
-            config->log_level = FOSSIL_SANITY_LOG_CRITICAL;
-        } else if (strcmp(arg, "--show-debug") == 0) {
-            config->log_level = FOSSIL_SANITY_LOG_DEBUG;
-        } else if (strcmp(arg, "--help") == 0) {
-            show_usage();
-            exit(0);
-        } else if (strcmp(arg, "--version") == 0) {
-            puts("Fossil Sanity version 0.1.0\n");
-            exit(0);
+        fossil_sanity_log_entry_t *current = queue->head;
+        while (current && current->priority >= priority) {
+            current = current->next;
+        }
+        if (!current) {
+            // Add to the tail
+            queue->tail->next = new_entry;
+            new_entry->prev = queue->tail;
+            queue->tail = new_entry;
+        } else if (current == queue->head) {
+            // Insert at the front
+            new_entry->next = queue->head;
+            queue->head->prev = new_entry;
+            queue->head = new_entry;
         } else {
-            fprintf(stderr, "Warning: Unknown argument '%s'.\n", arg);
+            // Insert between current and current->prev
+            new_entry->prev = current->prev;
+            new_entry->next = current;
+            current->prev->next = new_entry;
+            current->prev = new_entry;
         }
     }
 }
 
-// ============================================================================
-// User input validation
-// ============================================================================
-
-bool fossil_sanity_validate_integer(const char *input) {
-    if (!input || *input == '\0') return false;
-    while (*input) {
-        if (!isdigit(*input)) return false;
-        input++;
+// Pop the log with the highest priority
+char *fossil_sanity_log_pop(fossil_sanity_log_queue_t *queue) {
+    if (!queue->head) {
+        return NULL;
     }
-    return true;
+
+    fossil_sanity_log_entry_t *log_to_pop = queue->head;
+    char *message = _custom_strdup(log_to_pop->message);
+    
+    queue->head = log_to_pop->next;
+    if (queue->head) {
+        queue->head->prev = NULL;
+    } else {
+        queue->tail = NULL;  // Queue is empty now
+    }
+
+    free(log_to_pop);
+    return message;
 }
 
-// Validate if input string contains only allowed characters
-bool fossil_sanity_validate_string(const char *input, const char *allowed_chars) {
-    if (!input || !allowed_chars) return false;
-    while (*input) {
-        if (!strchr(allowed_chars, *input)) return false;
-        input++;
+// Print all logs in the queue
+void fossil_sanity_log_print(fossil_sanity_log_queue_t *queue) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        if (smart_log_format) {
+            switch (current->priority) {
+                case FOSSIL_SANITY_LOG_LEVEL_DEBUG:
+                    printf("[DEBUG]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_INFO:
+                    printf("[INFO]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_WARNING:
+                    printf("[WARNING]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_ERROR:
+                    printf("[ERROR]: %s\n", current->message);
+                    break;
+                case FOSSIL_SANITY_LOG_LEVEL_FATAL:
+                    printf("[FATAL]: %s\n", current->message);
+                    break;
+                default:
+                    printf("[UNKNOWN]: %s\n", current->message);
+            }
+        } else {
+            printf("%s\n", current->message);
+        }
+        current = current->next;
     }
-    return true;
 }
 
-// ============================================================================
-// NLP related functions
-// ============================================================================
-
-bool fossil_sanity_check_message_clarity(const char *message) {
-    if (!message || strlen(message) == 0) {
-        return false;
+// Clear all logs in the queue
+void fossil_sanity_log_clear(fossil_sanity_log_queue_t *queue) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        fossil_sanity_log_entry_t *next = current->next;
+        free(current);
+        current = next;
     }
-
-    const char *delimiters = " .,!?";
-    char *message_copy = custom_strdup(message);
-    if (!message_copy) {
-        return false;
-    }
-
-    size_t word_count = 0;
-    size_t noun_count = 0, verb_count = 0, adj_count = 0, rotbrain_count = 0, offensive_count = 0;
-    char *token = strtok(message_copy, delimiters);
-
-    while (token) {
-        word_count++;
-
-        if (is_in_array(token, NOUNS, sizeof(NOUNS) / sizeof(NOUNS[0]))) {
-            noun_count++;
-        } else if (is_in_array(token, VERBS, sizeof(VERBS) / sizeof(VERBS[0]))) {
-            verb_count++;
-        } else if (is_in_array(token, ADJECTIVES, sizeof(ADJECTIVES) / sizeof(ADJECTIVES[0]))) {
-            adj_count++;
-        } else if (is_in_array(token, ROTBRAIN, sizeof(ROTBRAIN) / sizeof(ROTBRAIN[0]))) {
-            rotbrain_count++;
-        } else if (is_in_array(token, OFFENSIVE, sizeof(OFFENSIVE) / sizeof(OFFENSIVE[0]))) {
-            offensive_count++;
-        }
-
-        token = strtok(NULL, delimiters);
-    }
-
-    free(message_copy);
-
-    if (noun_count > 0 && verb_count > 0 && adj_count > 0 && rotbrain_count < 3 && offensive_count == 0 && word_count <= 20) {
-        return true;
-    }
-
-    return false;
+    queue->head = queue->tail = NULL;
 }
 
-bool fossil_sanity_check_grammar(const char *message) {
-    if (!message || strlen(message) == 0) {
-        return false;
+// Sort logs in descending order of priority (Highest priority first)
+void fossil_sanity_log_sort(fossil_sanity_log_queue_t *queue) {
+    if (!queue->head) return;
+
+    bool swapped;
+    do {
+        swapped = false;
+        fossil_sanity_log_entry_t *current = queue->head;
+        while (current && current->next) {
+            if (current->priority < current->next->priority) {
+                // Swap the log entries
+                int temp_priority = current->priority;
+                int temp_severity = current->severity;
+                char temp_message[MAX_LOG_MESSAGE_LENGTH];
+                strcpy(temp_message, current->message);
+
+                current->priority = current->next->priority;
+                current->severity = current->next->severity;
+                strcpy(current->message, current->next->message);
+
+                current->next->priority = temp_priority;
+                current->next->severity = temp_severity;
+                strcpy(current->next->message, temp_message);
+
+                swapped = true;
+            }
+            current = current->next;
+        }
+    } while (swapped);
+}
+
+// Filter logs based on minimum priority (Only logs with higher or equal priority will be shown)
+void fossil_sanity_log_filter(fossil_sanity_log_queue_t *queue, int min_priority) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        if (current->priority < min_priority) {
+            // Remove log entry
+            fossil_sanity_log_entry_t *to_remove = current;
+            current = current->next;
+            if (to_remove->prev) to_remove->prev->next = to_remove->next;
+            if (to_remove->next) to_remove->next->prev = to_remove->prev;
+
+            if (to_remove == queue->head) queue->head = current;
+            if (to_remove == queue->tail) queue->tail = current;
+
+            free(to_remove);
+        } else {
+            current = current->next;
+        }
+    }
+}
+
+// Search for a log entry containing the keyword
+char *fossil_sanity_log_search(fossil_sanity_log_queue_t *queue, const char *keyword) {
+    fossil_sanity_log_entry_t *current = queue->head;
+    while (current) {
+        if (strstr(current->message, keyword)) {
+            return current->message;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+// Rotate log file when the size exceeds a threshold
+void fossil_sanity_log_rotate(fossil_sanity_log_rotation_t *rotation) {
+    FILE *file = fopen(rotation->log_file_path, "a");
+    if (!file) {
+        perror("Failed to open log file");
+        return;
     }
 
-    const char *delimiters = " .,!?";
-    char *message_copy = custom_strdup(message);
-    if (!message_copy) {
-        return false;
+    fseek(file, 0, SEEK_END);
+    rotation->current_size = ftell(file);
+    if (rotation->current_size > MAX_LOG_FILE_SIZE) {
+        // Rotate the log file (move the current log to a backup and create a new one)
+        fclose(file);
+        rename(rotation->log_file_path, "log_backup.txt");
+        file = fopen(rotation->log_file_path, "w");
     }
 
-    bool started_with_article = false;
-    bool has_verb = false;
-    bool has_noun = false;
-    bool has_adj_or_prep = false;
-    bool rotbrain_used = false;
-    bool offensive_used = false;
+    fclose(file);
+}
 
-    char *token = strtok(message_copy, delimiters);
+// Send a notification for critical logs (e.g., FATAL level)
+void fossil_sanity_log_notify(const char *message) {
+    printf("ALERT: Critical log - %s\n", message);  // Example notification (can be email or SMS in real applications)
+}
 
-    while (token) {
-        if (is_in_array(token, ARTICLES, sizeof(ARTICLES) / sizeof(ARTICLES[0]))) {
-            started_with_article = true;
-        }
-
-        if (is_in_array(token, NOUNS, sizeof(NOUNS) / sizeof(NOUNS[0]))) {
-            has_noun = true;
-        }
-
-        if (is_in_array(token, VERBS, sizeof(VERBS) / sizeof(VERBS[0]))) {
-            has_verb = true;
-        }
-
-        if (is_in_array(token, ADJECTIVES, sizeof(ADJECTIVES) / sizeof(ADJECTIVES[0])) ||
-            is_in_array(token, PREPOSITIONS, sizeof(PREPOSITIONS) / sizeof(PREPOSITIONS[0]))) {
-            has_adj_or_prep = true;
-        }
-
-        if (is_in_array(token, ROTBRAIN, sizeof(ROTBRAIN) / sizeof(ROTBRAIN[0]))) {
-            rotbrain_used = true;
-        }
-
-        if (is_in_array(token, OFFENSIVE, sizeof(OFFENSIVE) / sizeof(OFFENSIVE[0]))) {
-            offensive_used = true;
-        }
-
-        token = strtok(NULL, delimiters);
+// Log with smart formatting based on severity and level
+void fossil_sanity_log_smart_log(fossil_sanity_log_queue_t *queue, int level, int severity, const char *message) {
+    if (severity == FOSSIL_SANITY_LOG_SEVERITY_HIGH) {
+        fossil_sanity_log_notify(message);  // Notify if severity is high
     }
+    fossil_sanity_log_push(queue, message, level, severity);
+}
 
-    free(message_copy);
-
-    if (started_with_article && has_noun && has_verb && has_adj_or_prep && !rotbrain_used && !offensive_used) {
-        return true;
-    }
-
-    return false;
+// Enable or disable smart log format
+void fossil_sanity_log_set_smart_format(bool enable) {
+    smart_log_format = enable;
 }

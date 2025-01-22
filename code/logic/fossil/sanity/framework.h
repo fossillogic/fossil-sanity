@@ -16,5 +16,7 @@
 #define FOSSIL_SANITY_FRAMEWORK_H
 
 #include "sanity.h"
+#include "parser.h"
+#include "validate.h"
 
 #endif
