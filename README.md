@@ -46,7 +46,7 @@ Before integrating **Fossil Sanity** into your project, ensure the following:
    ```ini
    [wrap-git]
    url = https://github.com/fossillogic/fossil-sanity.git
-   revision = v0.1.0
+   revision = v0.1.1
 
    [provide]
    fossil-sanity = fossil_sanity_dep
