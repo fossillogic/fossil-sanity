@@ -64,6 +64,32 @@ const char* suggest_command(const char *input, fossil_sanity_parser_palette_t *p
 // Functions
 // ==================================================================
 
+// Function to print all available commands and descriptions (--help)
+void print_help(const fossil_sanity_parser_palette_t *palette) {
+    printf("Available Commands:\n");
+    fossil_sanity_parser_command_t *command = palette->commands;
+    while (command) {
+        printf("  %s: %s\n", command->name, command->description ? command->description : "No description available");
+        command = command->next;
+    }
+}
+
+// Function to print usage examples (--usage)
+void print_usage(const fossil_sanity_parser_palette_t *palette) {
+    printf("Usage Examples:\n");
+    fossil_sanity_parser_command_t *command = palette->commands;
+    while (command) {
+        printf("  %s", command->name);
+        fossil_sanity_parser_argument_t *argument = command->arguments;
+        while (argument) {
+            printf(" [%s]", argument->name);
+            argument = argument->next;
+        }
+        printf("\n");
+        command = command->next;
+    }
+}
+
 fossil_sanity_parser_palette_t *fossil_sanity_parser_create_palette(const char *name, const char *description) {
     fossil_sanity_parser_palette_t *palette = malloc(sizeof(fossil_sanity_parser_palette_t));
     palette->name = _custom_strdup(name);
@@ -98,6 +124,7 @@ fossil_sanity_parser_argument_t *fossil_sanity_parser_add_argument(fossil_sanity
     return argument;
 }
 
+// Updated parse function
 void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int argc, char **argv) {
     if (argc < 2) {
         fprintf(stderr, "No command provided.\n");
@@ -105,6 +132,16 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
     }
 
     const char *command_name = argv[1];
+
+    // Check for --help and --usage flags
+    if (strcmp(command_name, "--help") == 0) {
+        print_help(palette);
+        return;
+    } else if (strcmp(command_name, "--usage") == 0) {
+        print_usage(palette);
+        return;
+    }
+
     fossil_sanity_parser_command_t *command = palette->commands;
     while (command) {
         if (strcmp(command->name, command_name) == 0) {
@@ -114,12 +151,12 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
     }
 
     if (!command) {
-        // Unknown command; suggest a similar one
+        // Suggest a similar command or show an error
         const char *suggestion = suggest_command(command_name, palette);
         if (suggestion) {
             fprintf(stderr, "Unknown command: '%s'. Did you mean '%s'?\n", command_name, suggestion);
         } else {
-            fprintf(stderr, "Unknown command: '%s'. Type 'help' to see available commands.\n", command_name);
+            fprintf(stderr, "Unknown command: '%s'. Type '--help' to see available commands.\n", command_name);
         }
         return;
     }
@@ -144,7 +181,7 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
                         }
                         break;
                     case FOSSIL_SANITY_PARSER_STRING:
-                        argument->value = _custom_strdup(arg_value); // Custom _custom_strdup
+                        argument->value = strdup(arg_value); // Custom strdup
                         break;
                     case FOSSIL_SANITY_PARSER_INT:
                         argument->value = malloc(sizeof(int));
@@ -153,7 +190,7 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
                     case FOSSIL_SANITY_PARSER_COMBO:
                         for (int j = 0; j < argument->combo_count; j++) {
                             if (strcmp(arg_value, argument->combo_options[j]) == 0) {
-                                argument->value = _custom_strdup(arg_value);
+                                argument->value = strdup(arg_value);
                                 break;
                             }
                         }
