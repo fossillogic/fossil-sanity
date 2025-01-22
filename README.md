@@ -61,6 +61,60 @@ Before integrating **Fossil Sanity** into your project, ensure the following:
 
 ---
 
+### **Example: Setting Up and Parsing Commands**
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include "fossil/sanity/framework.h"
+
+int main(int argc, char **argv) {
+    // Step 1: Create a parser palette
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette(
+        "MyTool Palette", 
+        "A palette for parsing MyTool commands."
+    );
+
+    // Step 2: Add a command
+    fossil_sanity_parser_command_t *add_command = fossil_sanity_parser_add_command(
+        palette, 
+        "add", 
+        "Adds a new item to the list."
+    );
+
+    // Step 3: Add arguments to the 'add' command
+    fossil_sanity_parser_add_argument(add_command, "name", FOSSIL_SANITY_PARSER_STRING, NULL, 0);
+    fossil_sanity_parser_add_argument(add_command, "priority", FOSSIL_SANITY_PARSER_COMBO, 
+        (char *[]){"high", "medium", "low"}, 3);
+    fossil_sanity_parser_add_argument(add_command, "urgent", FOSSIL_SANITY_PARSER_BOOL, NULL, 0);
+
+    // Step 4: Add another command
+    fossil_sanity_parser_command_t *list_command = fossil_sanity_parser_add_command(
+        palette, 
+        "list", 
+        "Lists all items."
+    );
+
+    // Step 5: Parse command-line arguments
+    fossil_sanity_parser_parse(palette, argc, argv);
+
+    // Step 6: Free the parser palette
+    fossil_sanity_parser_free(palette);
+
+    return 0;
+}
+```
+
+---
+
+### **Features**
+
+- Dynamic Help: Use `--help` or `--help <command>` to get detailed information.
+- Dynamic Usage: Add arguments dynamically with support for combos and booleans.
+- Extendable: Easily add more commands and arguments using the provided API.
+
+---
+
 ## **Configure Build Options**
 
 To configure the build system with testing enabled, use the following command:
