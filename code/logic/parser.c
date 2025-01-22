@@ -144,7 +144,7 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
                         }
                         break;
                     case FOSSIL_SANITY_PARSER_STRING:
-                        argument->value = strdup(arg_value); // Custom strdup
+                        argument->value = _custom_strdup(arg_value); // Custom _custom_strdup
                         break;
                     case FOSSIL_SANITY_PARSER_INT:
                         argument->value = malloc(sizeof(int));
@@ -153,7 +153,7 @@ void fossil_sanity_parser_parse(fossil_sanity_parser_palette_t *palette, int arg
                     case FOSSIL_SANITY_PARSER_COMBO:
                         for (int j = 0; j < argument->combo_count; j++) {
                             if (strcmp(arg_value, argument->combo_options[j]) == 0) {
-                                argument->value = strdup(arg_value);
+                                argument->value = _custom_strdup(arg_value);
                                 break;
                             }
                         }
