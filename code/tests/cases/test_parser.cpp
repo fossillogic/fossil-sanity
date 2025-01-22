@@ -14,7 +14,6 @@
  */
 #include <fossil/test/framework.h>
 #include <fossil/sanity/framework.h>
-#include <string>
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
@@ -45,130 +44,56 @@ FOSSIL_TEARDOWN(cpp_parser_suite) {
 // as samples for library usage.
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
-FOSSIL_TEST_CASE(cpp_parser_add_option) {
-    bool bool_option = false;
-    int int_option = 0;
-    char string_option[100] = {0};
-
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
-
-    // Assuming we have a way to simulate command-line input
-    char *argv[] = {const_cast<char *>("program"), const_cast<char *>("--enable-feature"), const_cast<char *>("--set-value"), const_cast<char *>("42"), const_cast<char *>("--set-name"), const_cast<char *>("test")};
-    int argc = sizeof(argv) / sizeof(argv[0]);
-
-    FOSSIL_TEST_ASSUME(fossil_sanity_parser_parse(argc, argv) == 0, "Parser should succeed");
-    FOSSIL_TEST_ASSUME(bool_option == true, "Boolean option should be true");
-    FOSSIL_TEST_ASSUME(int_option == 42, "Integer option should be 42");
-} // end case
-
-bool subcommand_call = false;
-
-int subcommand_handler(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
-    subcommand_call = true;
-    return 0;
+FOSSIL_TEST_CASE(cpp_parser_create_palette) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
+    FOSSIL_TEST_ASSUME(palette != NULL, "Palette should be created successfully");
+    fossil_sanity_parser_free(palette);
 }
 
-FOSSIL_TEST_CASE(cpp_parser_add_subcommand) {
-    fossil_sanity_parser_option_t options[] = {
-        {"--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, NULL, "Enable feature"}
-    };
+FOSSIL_TEST_CASE(cpp_parser_add_command) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
+    fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
+    // Assuming there's a way to verify the command was added, e.g., by checking the palette's internal state
+    fossil_sanity_parser_free(palette);
+}
 
-    fossil_sanity_parser_add_subcommand("subcmd", "Test subcommand", options, 1, subcommand_handler);
+FOSSIL_TEST_CASE(cpp_parser_add_argument) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
+    fossil_sanity_parser_command_t *command;
+    fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
+    fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
+    // Assuming there's a way to verify the argument was added, e.g., by checking the command's internal state
+    fossil_sanity_parser_free(palette);
+}
 
-    // Assuming we have a way to simulate command-line input
-    std::string program = "program";
-    std::string subcmd = "subcmd";
-    std::string enable_feature = "--enable-feature";
-    char *argv[] = {const_cast<char *>(program.c_str()), const_cast<char *>(subcmd.c_str()), const_cast<char *>(enable_feature.c_str())};
+FOSSIL_TEST_CASE(cpp_parser_parse_with_palette) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
+    fossil_sanity_parser_command_t *command;
+    fossil_sanity_parser_add_command(palette, "test_command", "Test command description");
+    fossil_sanity_parser_add_argument(command, "test_arg", FOSSIL_SANITY_PARSER_STRING);
+
+    char *argv[] = {"program", "test_command", "test_arg_value"};
     int argc = sizeof(argv) / sizeof(argv[0]);
+    fossil_sanity_parser_parse(palette, argc, argv);
+    // Assuming there's a way to verify the parsing result, e.g., by checking the command's internal state
+    fossil_sanity_parser_free(palette);
+}
 
-    FOSSIL_TEST_ASSUME(fossil_sanity_parser_parse(argc, argv) == 0, "Parser should succeed");
-    FOSSIL_TEST_ASSUME(subcommand_call == true, "Subcommand handler should be called");
-} // end case
-
-FOSSIL_TEST_CASE(cpp_parser_load_ini) {
-    // Assuming we have a temporary INI file for testing
-    const char *ini_file_path = "test.ini";
-    FILE *file = fopen(ini_file_path, "w");
-    fprintf(file, "[options]\nenable-feature=true\nset-value=42\nset-name=test\n");
-    fclose(file);
-
-    bool bool_option = false;
-    int int_option = 0;
-    char string_option[100] = {0};
-
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
-
-    FOSSIL_TEST_ASSUME(fossil_sanity_parser_load_ini(ini_file_path) == 0, "INI file should load successfully");
-    FOSSIL_TEST_ASSUME(bool_option == true, "Boolean option should be true");
-    FOSSIL_TEST_ASSUME(int_option == 42, "Integer option should be 42");
-    FOSSIL_TEST_ASSUME(strcmp(string_option, "test") == 0, "String option should be 'test'");
-
-    remove(ini_file_path);
-} // end case
-
-FOSSIL_TEST_CASE(cpp_parser_save_ini) {
-    // Assuming we have a temporary INI file for testing
-    const char *ini_file_path = "test.ini";
-
-    bool bool_option = true;
-    int int_option = 42;
-    char string_option[100] = "test";
-
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
-
-    FOSSIL_TEST_ASSUME(fossil_sanity_parser_save_ini(ini_file_path) == 0, "INI file should save successfully");
-
-    // Verify the contents of the saved INI file
-    FILE *file = fopen(ini_file_path, "r");
-    char buffer[1024];
-    size_t read_size = fread(buffer, 1, sizeof(buffer) - 1, file);
-    buffer[read_size] = '\0'; // Null-terminate the buffer
-    fclose(file);
-
-    FOSSIL_TEST_ASSUME(strstr(buffer, "enable-feature=true") != NULL, "INI file should contain 'enable-feature=true'");
-    FOSSIL_TEST_ASSUME(strstr(buffer, "set-value=42") != NULL, "INI file should contain 'set-value=42'");
-    FOSSIL_TEST_ASSUME(strstr(buffer, "set-name=test") != NULL, "INI file should contain 'set-name=test'");
-
-    remove(ini_file_path);
-} // end case
-
-FOSSIL_TEST_CASE(cpp_parser_set_defaults_with_ai) {
-    bool bool_option = false;
-    int int_option = 0;
-    char string_option[100] = {0};
-
-    fossil_sanity_parser_add_option("--enable-feature", 'e', FOSSIL_SANITY_PARSER_TYPE_BOOL, &bool_option, "Enable feature");
-    fossil_sanity_parser_add_option("--set-value", 's', FOSSIL_SANITY_PARSER_TYPE_INT, &int_option, "Set integer value");
-    fossil_sanity_parser_add_option("--set-name", 'n', FOSSIL_SANITY_PARSER_TYPE_STRING, string_option, "Set string value");
-
-    fossil_sanity_parser_set_defaults_with_ai();
-
-    // Assuming AI sets some default values
-    FOSSIL_TEST_ASSUME(bool_option == true, "Boolean option should be set to true by AI");
-    // FOSSIL_TEST_ASSUME(int_option == 100, "Integer option should be set to 100 by AI");
-    // FOSSIL_TEST_ASSUME(strcmp(string_option, "default") == 0, "String option should be set to 'default' by AI");
-} // end case
-
-
+FOSSIL_TEST_CASE(cpp_parser_free_palette) {
+    fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette("test_palette", "Test palette description");
+    fossil_sanity_parser_free(palette);
+    // Assuming there's a way to verify the palette was freed, e.g., by checking for memory leaks
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
 // * Fossil Logic Test Pool
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(cpp_parser_test_cases) {
-    // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_option);
-    // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_subcommand);
-    // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_load_ini);
-    // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_save_ini);
-    // FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_set_defaults_with_ai);
+    FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_create_palette);
+    FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_command);
+    FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_add_argument);
+    FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_parse_with_palette);
+    FOSSIL_TEST_ADD(cpp_parser_suite, cpp_parser_free_palette);
 
     FOSSIL_TEST_REGISTER(cpp_parser_suite);
 } // end of group
