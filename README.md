@@ -1,47 +1,53 @@
-# **Fossil Sanity by Fossil Logic**
+# **Fossil Sanity Utility Kit by Fossil Logic**
 
-**Fossil Sanity** is a comprehensive validation, logging, and command parsing library designed to help developers maintain clarity and control over user input, application state, and debugging information. It offers a powerful suite of tools to track the correctness of inputs, monitor anomalies, and ensure software stability across diverse environments, particularly for C and C++ projects.
+**Fossil Sanity** is a robust utility kit designed to streamline user input validation, command-line interface (CLI) management, and logging for C and C++ projects. This all-in-one solution simplifies application workflows by ensuring consistent validation, intuitive CLI interfaces, and efficient logging mechanisms, making it an essential tool for developers seeking clarity and control.
 
-With a focus on seamless integration, Fossil Sanity ensures robust input validation, customizable logging features, intelligent command parsing, and real-time feedback on user actions and application errors. Additionally, it leverages cutting-edge AI techniques to enhance feature functionality and provide smarter, context-aware assistance to developers.
+With its modular design, **Fossil Sanity** offers highly configurable validation rules, a smart and extensible command parser, and advanced logging capabilities that enhance debugging and monitoring across platforms.
 
 ---
 
-## **Key Features**
+## **Key Utilities**
 
 | Feature                          | Description                                                                                                     |
 |----------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| **Comprehensive Validation**     | Supports validation for various input types (e.g., strings, numbers), ensuring flexibility and reliability.     |
-| **Custom Validation Rules**      | Allows developers to define tailored validation rules for simple checks or complex requirements.               |
-| **Cross-Platform Support**       | Ensures consistent validation behavior across multiple platforms and environments.                             |
-| **Performance-Friendly**         | Optimized to minimize performance overhead, even for intensive validation tasks.                               |
-| **Configurable Validation Levels** | Enables fine-grained control over validation thresholds to align with project-specific needs.                 |
-| **Notification Management**      | Built-in tools for automatic alerts and logging to keep you informed of validation outcomes and issues.        |
-| **Log Rotation and Notifications** | Logs critical issues, rotates log files when size thresholds are reached, and sends notifications for key logs. |
-| **Command Parser**               | A built-in command parser to validate, parse, and process user input efficiently.                              |
-| **Smart Log Formatting**         | Automatically formats log entries based on severity levels, with options for real-time notifications and alerts. |
+| **Input Validation**             | Provides built-in validation for strings, numbers, and more, ensuring data accuracy and reliability.             |
+| **Custom Rules**                 | Define flexible, project-specific validation rules to meet any requirement.                                     |
+| **Cross-Platform CLI Support**   | Ensures consistent behavior and output across different platforms.                                              |
+| **Efficient Logging**            | Optimized logging system with configurable levels, smart formatting, and real-time notifications.                |
+| **CLI Command Parsing**          | Simplifies handling of user commands with an intelligent parser and support for dynamic argument management.     |
+| **Log Management**               | Features such as log rotation and critical alerts keep your application’s logging organized and insightful.      |
+| **Dynamic CLI Features**         | Offers dynamic help commands (`--help`, `--help <command>`) and flexible argument options (e.g., combos, booleans). |
 
 ---
 
-## **Prerequisites**
+## **Why Use Fossil Sanity?**
 
-Before integrating **Fossil Sanity** into your project, ensure the following:
-
-- **Meson Build System**: Fossil Sanity leverages Meson for configuration. Follow the installation instructions on the official [Meson website](https://mesonbuild.com/Getting-meson.html) if you don’t already have it installed.
+- **Consistent CLI Experience:** Simplifies creating and managing command-line interfaces with a clear structure and dynamic argument handling.  
+- **Error-Free Input:** Avoids runtime issues by validating inputs before processing.  
+- **Enhanced Debugging:** Detailed, formatted logs with severity levels ensure issues can be identified and resolved quickly.  
+- **Seamless Integration:** Built for C and C++ environments with minimal setup and performance overhead.  
 
 ---
 
-### **Adding Fossil Sanity to Your Project**
+## **Getting Started**
+
+### **Prerequisites**
+
+To use **Fossil Sanity**, ensure the following:  
+- **Meson Build System**: Required for configuring and integrating Fossil Sanity. Install it from the [Meson website](https://mesonbuild.com/Getting-meson.html).
+
+### **Setup Instructions**
 
 1. **Install Meson**  
-   Install or upgrade Meson (version `1.3` or newer):
+   Install or upgrade Meson to version `1.3` or newer:
 
    ```sh
    python -m pip install meson           # Install Meson
    python -m pip install --upgrade meson # Upgrade Meson
    ```
 
-2. **Add a `.wrap` File**  
-   Create a `fossil-sanity.wrap` file in your `subprojects` directory:
+2. **Add the Library**  
+   Create a `.wrap` file in your `subprojects` directory:
 
    ```ini
    [wrap-git]
@@ -53,7 +59,7 @@ Before integrating **Fossil Sanity** into your project, ensure the following:
    ```
 
 3. **Integrate the Dependency**  
-   Add the following to your `meson.build` file to include Fossil Sanity:
+   Add the following to your `meson.build` file:
 
    ```meson
    dep = dependency('fossil-sanity')
@@ -61,7 +67,7 @@ Before integrating **Fossil Sanity** into your project, ensure the following:
 
 ---
 
-### **Example: Setting Up and Parsing Commands**
+## **Example: Building a CLI with Validation and Logging**
 
 ```c
 #include <stdio.h>
@@ -69,36 +75,29 @@ Before integrating **Fossil Sanity** into your project, ensure the following:
 #include "fossil/sanity/framework.h"
 
 int main(int argc, char **argv) {
-    // Step 1: Create a parser palette
+    // Initialize a CLI parser
     fossil_sanity_parser_palette_t *palette = fossil_sanity_parser_create_palette(
-        "MyTool Palette", 
-        "A palette for parsing MyTool commands."
+        "ExampleApp", 
+        "Command-line interface for ExampleApp."
     );
 
-    // Step 2: Add a command
+    // Add commands and arguments
     fossil_sanity_parser_command_t *add_command = fossil_sanity_parser_add_command(
         palette, 
         "add", 
-        "Adds a new item to the list."
+        "Adds an item."
     );
-
-    // Step 3: Add arguments to the 'add' command
     fossil_sanity_parser_add_argument(add_command, "name", FOSSIL_SANITY_PARSER_STRING, NULL, 0);
     fossil_sanity_parser_add_argument(add_command, "priority", FOSSIL_SANITY_PARSER_COMBO, 
         (char *[]){"high", "medium", "low"}, 3);
-    fossil_sanity_parser_add_argument(add_command, "urgent", FOSSIL_SANITY_PARSER_BOOL, NULL, 0);
 
-    // Step 4: Add another command
-    fossil_sanity_parser_command_t *list_command = fossil_sanity_parser_add_command(
-        palette, 
-        "list", 
-        "Lists all items."
-    );
-
-    // Step 5: Parse command-line arguments
+    // Parse user input
     fossil_sanity_parser_parse(palette, argc, argv);
 
-    // Step 6: Free the parser palette
+    // Log actions
+    fossil_sanity_log_info("Command executed successfully.");
+
+    // Clean up
     fossil_sanity_parser_free(palette);
 
     return 0;
@@ -107,17 +106,17 @@ int main(int argc, char **argv) {
 
 ---
 
-### **Features**
+### **Key Features in Action**
 
-- Dynamic Help: Use `--help` or `--help <command>` to get detailed information.
-- Dynamic Usage: Add arguments dynamically with support for combos and booleans.
-- Extendable: Easily add more commands and arguments using the provided API.
+- **Validation:** Automatically ensures the correctness of input arguments.  
+- **Command Parsing:** Quickly define commands with multiple argument types (e.g., strings, enums, booleans).  
+- **Logging:** Output informative logs with customizable severity levels (e.g., info, warning, error).  
 
 ---
 
-## **Configure Build Options**
+## **Configuring Build Options**
 
-To configure the build system with testing enabled, use the following command:
+To enable testing or additional features during setup, use the following command:  
 
 ```sh
 meson setup builddir -Dwith_test=enabled
@@ -127,10 +126,10 @@ meson setup builddir -Dwith_test=enabled
 
 ## **Contributing and Support**
 
-We welcome contributions! If you have questions, encounter issues, or wish to contribute, visit the [Fossil Sanity GitHub repository](https://github.com/fossillogic/fossil-sanity) or explore our detailed documentation at the [Fossil Logic Docs](https://fossillogic.com/docs).
+We welcome contributions! For questions, issues, or contributions, visit the [Fossil Sanity GitHub repository](https://github.com/fossillogic/fossil-sanity) or check out our detailed documentation at [Fossil Logic Docs](https://fossillogic.com/docs).
 
 ---
 
 ## **Conclusion**
 
-**Fossil Sanity** is an essential library for maintaining input validation, runtime monitoring, and logging in your C and C++ projects. Whether you are debugging, optimizing performance, or ensuring stability in production, Fossil Sanity equips you with the tools needed to stay in control. When paired with other **Fossil Logic** tools, it provides a complete solution for reliable validation and logging across platforms.
+**Fossil Sanity** is your go-to utility kit for input validation, consistent CLI interfaces, and effective logging. Its user-friendly API and cross-platform support make it an invaluable addition to any C or C++ project. Pair it with other tools from **Fossil Logic** to build stable, efficient, and maintainable software.
